@@ -1,0 +1,33 @@
+ifeq ($(KERNELRELEASE),)  
+
+#########################################
+# To support cross-compiling for the ARM:
+# For ARM, invoke make as:
+# make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- 
+ifeq ($(ARCH),arm)
+# Update 'KDIR' below to point to the ARM Linux kernel source tree
+KDIR ?= ~/buildroot/output/build/linux-4.8.1 # buildroot Aarch64
+#KDIR ?= ~/3.18.22-arm-tags
+else
+KDIR ?= /lib/modules/$(shell uname -r)/build 
+endif
+#########################################
+
+PWD := $(shell pwd)  
+
+.PHONY: build clean  
+
+build:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+install:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
+clean:
+	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
+
+else
+
+$(info Building with ARCH ${ARCH} and KERNELRELEASE ${KERNELRELEASE}) 
+EXTRA_CFLAGS += -DDEBUG -I${KDIR}/arch/arm64/include/generated/asm
+obj-m +=    vm_show_kernel_seg.o  
+
+endif
