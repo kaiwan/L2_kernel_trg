@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 
 	num = atoi(argv[2]);
 	if ((num < 0) || (num > INT_MAX)) {
-		fprintf(stderr,"%s: number of bytes '%d' invalid.\n", argv[0], num);
+		fprintf(stderr,"%s: number of bytes '%ld' invalid.\n", argv[0], num);
 		close (fd);
 		exit (1);
 	}
