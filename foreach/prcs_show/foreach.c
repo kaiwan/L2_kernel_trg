@@ -1,15 +1,13 @@
 /*
  * foreach.c
  *
- * Simple kernel program that either-
+ * Simple kernel program that -
  * -returns info about all *processes* (_not_ threads) on the task list
- * -returns info reg a particular task (ref by PID passed)
  * 
  * Author: Kaiwan N Billimoria <kaiwan@kaiwantech.com>
  * Released under the terms of the MIT License.
  *  https://en.wikipedia.org/wiki/MIT_License
  */
-
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -33,7 +31,6 @@
 #endif
 
 static int taskinfo_major = MY_MAJOR;
-//static int get_all=1; // TODO- concurrent safety- use atomic_t
 
 static ssize_t taskinfo_read(struct file *filp, char __user *buf, 
 		size_t count, loff_t *offp)
@@ -42,7 +39,7 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 	char *kbuf, tmp[128];
 	int numread=0, num=0;
 
-	if (!(kbuf = kzalloc (MAXKBUF_LEN, GFP_KERNEL))) {
+	if (!(kbuf = kzalloc(MAXKBUF_LEN, GFP_KERNEL))) {
 		printk (KERN_WARNING "%s: kmalloc failed", DRVNAME);
 		return -ENOMEM;
 	}
@@ -50,10 +47,12 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 	for_each_process(p) {
 		memset (tmp, 0, 128);
 		num = snprintf (tmp, 128, "\
-%-16s|%7d|%7d|%7d|%7d\n",
+%-16s|%7d|%7d|%7u|%7u\n",
 			p->comm, p->tgid, p->pid,
 			//p->uid, p->euid
-			task_uid(p), task_euid(p)
+			//current_uid().val, current_euid().val
+			__kuid_val(p->cred->uid),
+			__kuid_val(p->cred->euid)
 		);
 		strncat (kbuf, tmp, num);
 		numread += num;
@@ -70,20 +69,20 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 //printk("\n\n%s\n", kbuf);
 
 #if 1
-	if (copy_to_user (buf, kbuf, numread)) {
+	if (copy_to_user(buf, kbuf, numread)) {
 		printk (KERN_ALERT "foreach:copy_to_user failed..\n");
 		kfree (kbuf);
 		return -EFAULT;
 	}
 #endif
-	kfree (kbuf);
+	kfree(kbuf);
 	return count;
 }
 
 static ssize_t taskinfo_write(struct file *filp, const char __user *buf, 
 		size_t count, loff_t *offp)
 {
-	MSG( "process %s [pid %d], count=%d\n", 
+	MSG("process %s [pid %d], count=%ld\n", 
 			current->comm, current->pid, count);
 	return -ENOSYS;
 }
@@ -137,9 +136,9 @@ static int __init taskinfo_init_module(void)
 	 * Register the major, and accept a dynamic number.
 	 * The return value is the actual major # assigned.
 	 */
-	result = register_chrdev (taskinfo_major, DRVNAME, &taskinfoopen_fops);
+	result = register_chrdev(taskinfo_major, DRVNAME, &taskinfoopen_fops);
 	if (result < 0) {
-		MSG( "register_chrdev() failed trying to get taskinfo_major=%d\n",
+		MSG("register_chrdev() failed trying to get taskinfo_major=%d\n",
 		taskinfo_major);
 		return result;
 	}
