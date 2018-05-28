@@ -14,9 +14,10 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/sched.h>	/* current, jiffies */
+#include <linux/sched/signal.h>	/* for_each_xxx, ... */
 #include <linux/fs.h>		/* no_llseek */
 #include <linux/slab.h>
-#include <asm/uaccess.h>	/* copy_to_user() */
+#include <linux/uaccess.h>	/* copy_to_user() */
 #include <linux/kallsyms.h>
 
 #define	DRVNAME		"foreach"
