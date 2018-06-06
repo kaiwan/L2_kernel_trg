@@ -5,9 +5,9 @@ ifeq ($(KERNELRELEASE),)
 # For ARM, invoke make as:
 # make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- 
 ifeq ($(ARCH),arm)
-# Update 'KDIR' below to point to the ARM Linux kernel source tree
-KDIR ?= ~/buildroot/output/build/linux-4.8.1 # buildroot Aarch64
-#KDIR ?= ~/3.18.22-arm-tags
+### Update 'KDIR' below to point to the ARM Linux kernel source tree ###
+KDIR ?= ~/scratchpad/SEALS_staging/SEALS_staging_vexpress/linux-4.9.1
+#KDIR ?= ~/buildroot/output/build/linux-4.8.1 # buildroot Aarch64
 else
 KDIR ?= /lib/modules/$(shell uname -r)/build 
 endif
