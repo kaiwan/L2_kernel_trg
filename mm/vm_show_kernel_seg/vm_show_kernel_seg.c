@@ -6,7 +6,7 @@
  * Useful for learning, testing, etc.
  * For both 32 and 64-bit systems.
  *
- * (c) 2011-2017 Kaiwan NB, kaiwanTECH.
+ * (c) 2011-2018 Kaiwan NB, kaiwanTECH.
  * License: MIT
  */
 #include <linux/init.h>
@@ -41,14 +41,14 @@ static int statint=0x1000;
 
 void bar(void)
 {
-	MSG("---------------------Stack Dump:-------------------------------\n");
+	pr_info("---------------------Stack Dump:-------------------------------\n");
 	dump_stack();
-	MSG("---------------------------------------------------------------\n");
+	pr_info("---------------------------------------------------------------\n");
 }
 void foo(void)
 {
 	char c='x';
-	MSG("&c = 0x" FMTSPC "\n", (TYPECST)&c);
+	pr_info("&c = 0x" FMTSPC "\n", (TYPECST)&c);
 	bar();
 }
 
@@ -71,7 +71,7 @@ static inline void mempattern(
 	for (i=0; i < len/sizeof(u64 *); i++)
 #endif
                           {
-		//MSG("pattptr=%pK\n", pattptr);
+		//pr_info("pattptr=%pK\n", pattptr);
 		*pattptr = pattern;
 		pattptr ++;
 	}
@@ -85,14 +85,14 @@ static int __init vm_img_init(void)
    int knum=512,disp=32;
 
 #if(BITS_PER_LONG == 32)
-	MSG ("32-bit OS ");
+	pr_info ("32-bit OS ");
 #elif(BITS_PER_LONG == 64)
-	MSG ("64-bit OS ");
+	pr_info ("64-bit OS ");
 #endif
 #ifdef __BIG_ENDIAN  // just for the heck of it..
-	MSG("Big-endian.\n");
+	pr_info("Big-endian.\n");
 #else
-	MSG("Little-endian.\n");
+	pr_info("Little-endian.\n");
 #endif
 
 	/* Ha! When using "%d" etc for sizeof(), the compiler would complain:
@@ -100,7 +100,7 @@ static int __init vm_img_init(void)
 	 * argument 5 has type ‘long unsigned int’ [-Wformat=] ...
 	 * Turns out we shoud use "%zu" to correctly represent size_t (which sizeof operator returns)!
 	 */
-	MSG ("sizeof(int)=%zu, sizeof(long)=%zu sizeof(void *)=%zu\nsizeof(u64 *)=%zu\n", 
+	pr_info ("sizeof(int)=%zu, sizeof(long)=%zu sizeof(void *)=%zu\nsizeof(u64 *)=%zu\n", 
 		sizeof(int), sizeof(long), sizeof(void *), sizeof(u64 *));
 
 	kptr = kmalloc (knum, GFP_KERNEL);
@@ -126,7 +126,7 @@ static int __init vm_img_init(void)
 	 * DETAILS:
 	 * See https://www.kernel.org/doc/Documentation/printk-formats.txt
 	 */
-	MSG("kmalloc'ed memory dump (%d bytes @ %pK):\n", disp, kptr);
+	pr_info("kmalloc'ed memory dump (%d bytes @ %pK):\n", disp, kptr);
 	mempattern(kptr, MY_PATTERN1, knum);
 	print_hex_dump_bytes ("", DUMP_PREFIX_ADDRESS, kptr, disp);
 
@@ -137,7 +137,7 @@ static int __init vm_img_init(void)
 		return -ENOMEM;
 	}
 	mempattern(vptr, MY_PATTERN2, PAGE_SIZE);
-	MSG("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
+	pr_info("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
 	print_hex_dump_bytes ("", DUMP_PREFIX_ADDRESS, vptr, disp);
 
 	pr_info (
@@ -209,7 +209,6 @@ static int __init vm_img_init(void)
 		(TYPECST)kptr, (TYPECST)vptr);
 
 	foo();
-
 	return 0;
 }
 
@@ -224,7 +223,7 @@ module_init(vm_img_init);
 module_exit(vm_img_exit);
 
 MODULE_AUTHOR("Kaiwan N Billimoria <kaiwan at kaiwantech dot com>");
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("Dual GPL/MIT");
 
 /*
  * -------------------------- Sample OUTPUT ----------------------------------
