@@ -258,7 +258,137 @@ MODULE_LICENSE("Dual GPL/MIT");
 /*
  * -------------------------- Sample OUTPUT ----------------------------------
 ===============================================================================
-dmesg output of vm_img_lkm.c on a 32-bit Linux system
+dmesg output of vm_show_kernel_seg.c on an x86_64 Linux system (Fedora 28)
+===============================================================================
+
+[85850.257391] Platform:
+[85850.257395]  x86_64 : 
+[85850.257395]  64-bit OS 
+[85850.257397]  Little-endian.
+[85850.257399]  sizeof(int)   =4, sizeof(long) =8
+                sizeof(void *)=8, sizeof(u64 *)=8
+[85850.257403] kmalloc'ed memory dump (32 bytes @ ffff90a789e13600):
+[85850.257406] 0000000083c03d41: ce fa ad de ce fa ad de ce fa ad de ce fa ad de  ................
+[85850.257407] 000000008154b8a3: ce fa ad de ce fa ad de ce fa ad de ce fa ad de  ................
+[85850.257846] vmalloc'ed memory dump (32 bytes @ ffff9c540bc51000):
+[85850.257849] 0000000097b70711: 88 99 aa bb cc dd ee ff 88 99 aa bb cc dd ee ff  ................
+[85850.257850] 0000000079d92e44: 88 99 aa bb cc dd ee ff 88 99 aa bb cc dd ee ff  ................
+[85850.257852] 
+               Some Kernel Details [sorted by decreasing address] -------------------
+                FIXADDR_START       = 0xffffffffff576000
+                MODULES_END         = 0xffffffffff000000
+                MODULES_VADDR       = 0xffffffffc0000000 [modules range: 1008 MB]
+                CPU_ENTRY_AREA_BASE = 0xfffffe0000000000
+                VMEMMAP_START       = 0xffffeccec0000000
+                VMALLOC_END         = 0xffffbc53ffffffff
+                VMALLOC_START       = 0xffff9c5400000000 [vmalloc range: 33554431 MB =32767 GB]
+                PAGE_OFFSET         = 0xffff90a3c0000000 [lowmem region: start of all phy mapped RAM (here to RAM-size)]
+[85850.257860] 
+               Some Process Details [sorted by decreasing address] ------------------
+                [TASK_SIZE         = 0x00007ffffffff000 size of userland]
+                [Statistics wrt 'current' thread TGID=20577 PID=20577 name=insmod]:
+                       env_end     = 0x00007ffeb9904fe7
+                       env_start   = 0x00007ffeb9904780
+                       arg_end     = 0x00007ffeb9904780
+                       arg_start   = 0x00007ffeb9904761
+                       start_stack = 0x00007ffeb9903290
+                       curr brk    = 0x000055a288079000
+                       start_brk   = 0x000055a288058000
+                       end_data    = 0x000055a287e63080
+                       start_data  = 0x000055a287e61cf0
+                       end_code    = 0x000055a287c610e7
+                       start_code  = 0x000055a287c3e000
+                [# memory regions (VMAs) = 35]
+[85850.257867] 
+               Some sample kernel virtual addreses ---------------------
+               &statgul = 0xffffffffc15f7410, &jiffies_64 = 0xffffffff88205000, &vg = 0xffffffffc15f7030
+               kptr = 0xffff90a789e13600 vptr = 0xffff9c540bc51000
+[85850.257870] &c = 0xffff9c540cf37c3f
+[85850.257871] ---------------------Stack Dump:-------------------------------
+[85850.257873] CPU: 2 PID: 20577 Comm: insmod Tainted: P           OE    4.16.13-300.fc28.x86_64 #1
+[85850.257874] Hardware name: LENOVO 20FMA089IG/20FMA089IG, BIOS R06ET39W (1.13 ) 07/11/2016
+[85850.257876] Call Trace:
+[85850.257882]  dump_stack+0x5c/0x85
+[85850.257887]  bar+0x16/0x22 [vm_show_kernel_seg]
+[85850.257890]  foo+0x34/0x4e [vm_show_kernel_seg]
+[85850.257893]  vm_img_init+0x30c/0x1000 [vm_show_kernel_seg]
+[85850.257895]  ? 0xffffffffc133c000
+[85850.257898]  do_one_initcall+0x48/0x13b
+[85850.257902]  ? free_unref_page_commit+0x9b/0x110
+[85850.257904]  ? _cond_resched+0x15/0x30
+[85850.257907]  ? kmem_cache_alloc_trace+0x111/0x1c0
+[85850.257910]  ? do_init_module+0x22/0x210
+[85850.257912]  ? do_init_module+0x5a/0x210
+[85850.257914]  ? load_module+0x210f/0x24a0
+[85850.257917]  ? vfs_read+0x110/0x140
+[85850.257920]  ? SYSC_finit_module+0xad/0x110
+[85850.257922]  ? SYSC_finit_module+0xad/0x110
+[85850.257925]  ? do_syscall_64+0x74/0x180
+[85850.257927]  ? entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+[85850.257929] ---------------------------------------------------------------
+
+=======================================================================================
+dmesg output of vm_show_kernel_seg.c on an ARM-32 Linux system (Qemu-emulated Vexpress)
+=======================================================================================
+vm_show_kernel_seg: loading out-of-tree module taints kernel.
+vm_show_kernel_seg: module license 'Dual GPL/MIT' taints kernel.
+Disabling lock debugging due to kernel taint
+Platform:
+ ARM-32 : 
+ 32-bit OS 
+ Little-endian.
+ sizeof(int)   =4, sizeof(long) =4
+ sizeof(void *)=4, sizeof(u64 *)=4
+kmalloc'ed memory dump (32 bytes @ 9ee94200):
+9ee94200: ce fa ad de ce fa ad de ce fa ad de ce fa ad de  ................
+9ee94210: ce fa ad de ce fa ad de ce fa ad de ce fa ad de  ................
+vmalloc'ed memory dump (32 bytes @ a5346000):
+a5346000: cc dd ee ff cc dd ee ff cc dd ee ff cc dd ee ff  ................
+a5346010: cc dd ee ff cc dd ee ff cc dd ee ff cc dd ee ff  ................
+
+Some Kernel Details [sorted by decreasing address] -------------------
+ MODULES_END         = 0x80000000
+ MODULES_VADDR       = 0x7f000000 [modules range: 00000016 MB]
+ VMALLOC_END         = 0xff800000
+ VMALLOC_START       = 0xa0800000 [vmalloc range: 00001520 MB =00000001 GB]
+ PAGE_OFFSET         = 0x80000000 [lowmem region: start of all phy mapped RAM (here to RAM-size)]
+
+Some Process Details [sorted by decreasing address] ------------------
+ [TASK_SIZE         = 0x7f000000 size of userland]
+ [Statistics wrt 'current' thread TGID=736 PID=736 name=insmod]:
+        env_end     = 0x7e992fef
+        env_start   = 0x7e992f36
+        arg_end     = 0x7e992f36
+        arg_start   = 0x7e992f19
+        start_stack = 0x7e992e20
+        curr brk    = 0x000e4000
+        start_brk   = 0x000c3000
+        end_data    = 0x000c2719
+        start_data  = 0x000c1f08
+        end_code    = 0x000b1590
+        start_code  = 0x00010000
+ [# memory regions (VMAs) = 21]
+
+Some sample kernel virtual addreses ---------------------
+&statgul = 0x7f000908, &jiffies_64 = 0x80a02d00, &vg = 0x7f0006e4
+kptr = 0x9ee94200 vptr = 0xa5346000
+&c = 0x9ee89d87
+---------------------Stack Dump:-------------------------------
+CPU: 0 PID: 736 Comm: insmod Tainted: P           O    4.9.1 #4
+Hardware name: ARM-Versatile Express
+[<80110e98>] (unwind_backtrace) from [<8010cbc0>] (show_stack+0x20/0x24)
+[<8010cbc0>] (show_stack) from [<803f5714>] (dump_stack+0xb0/0xdc)
+[<803f5714>] (dump_stack) from [<7f000024>] (bar+0x24/0x34 [vm_show_kernel_seg])
+[<7f000024>] (bar [vm_show_kernel_seg]) from [<7f002298>] (vm_img_init+0x298/0x2a8 [vm_show_kernel_seg])
+[<7f002298>] (vm_img_init [vm_show_kernel_seg]) from [<80101d34>] (do_one_initcall+0x64/0x1ac)
+[<80101d34>] (do_one_initcall) from [<801ff884>] (do_init_module+0x74/0x1e4)
+[<801ff884>] (do_init_module) from [<8019f188>] (load_module+0x1cc4/0x22f8)
+[<8019f188>] (load_module) from [<8019f918>] (SyS_init_module+0x15c/0x17c)
+[<8019f918>] (SyS_init_module) from [<80108220>] (ret_fast_syscall+0x0/0x1c)
+---------------------------------------------------------------
+
+===============================================================================
+[OLDER] dmesg output of vm_img_lkm.c on an IA-32 Linux system
  (with indentation to make it human-readable)
 ===============================================================================
 [79146.354770] vm_img_init:67 : 32-bit OS Little-endian.
@@ -303,56 +433,5 @@ dmesg output of vm_img_lkm.c on a 32-bit Linux system
 [79146.354891]  [<c113a02b>] ? vm_mmap_pgoff+0x7b/0xa0
 [79146.354901]  [<c1661bcd>] sysenter_do_call+0x12/0x12
 [79146.354903] bar:41 : ---------------------------------------------------------------
-
-
-===============================================================================
-dmesg output of vm_img_lkm.c on a 64-bit Linux system
- (with indentation to make it human-readable)
-===============================================================================
-[432111.443835] vm_img_lkm: module license 'GPL/LGPL' taints kernel.
-[432111.443838] Disabling lock debugging due to kernel taint
-[432111.444208] vm_img_init:69 : 64-bit OS Little-endian.
-[432111.444211] vm_img_init:77 : sizeof(int) = 4, sizeof(long) = 8 sizeof(void *)=8
-
-[432111.444212] vm_img_init:85 : kmalloc'ed memory dump:
-[432111.444214] ffff8800966f6ca0: ce fa ad de ce fa ad de ce fa ad de ce fa ad de  ................
-[432111.444215] ffff8800966f6cb0: 6b 6d 00 00 00 00 00 00 00 00 00 00 00 00 00 00  km..............
-
-[432111.444225] vm_img_init:95 : vmalloc'ed memory start: 0xffffc90005a11000
-
-[432111.444228] vm_img_init:118 : Statistics wrt 'current'  [which right now is the process/thread TGID 19903 PID 19903 name insmod]:
-[432111.444228] PAGE_OFFSET = 0xffff880000000000 TASK_SIZE=0x7ffffffff000
-[432111.444228] VMALLOC_START = 0xffffc90000000000 VMALLOC_END=0xffffe8ffffffffff : vmalloc range: 0x01ffffff MB
-[432111.444228] MODULES_VADDR = 0xffffffffa0000000 MODULES_END=0xffffffffff000000 : modules range: 0x000005f0 MB
-[432111.444228] start_code = 0x7fb85339a000, end_code = 0x7fb8533bd2dc, start_data = 0x7fb8535be0d8, end_data = 0x7fb8535bf3a0
-[432111.444228] start_brk  = 0x7fb8553f6000, brk = 0x7fb855417000, start_stack = 0x7fff3e9ed550
-[432111.444228] arg_start  = 0x7fff3e9ed7e8, arg_end = 0x7fff3e9ed7ff, env_start = 0x7fff3e9ed7ff, env_end = 0x7fff3e9edfeb
-
-[432111.444228] eg. kernel vaddr: &statgul = 0xffffffffa06103b8, &jiffies_64 = 0xffffffff81d1d000, &vg = 0xffffffffa0610100
-[432111.444228] kptr = 0xffff8800966f6ca0 vptr = 0xffffc90005a11000
-[432111.444232] foo:46 : &c = 0xffff8800966cdc2f
-
-[432111.444232] bar:39 : ---------------------Stack Dump:-------------------------------
-[432111.444235] CPU: 1 PID: 19903 Comm: insmod Tainted: PF          O 3.13.0-24-generic #46-Ubuntu
-[432111.444236] Hardware name:                  /DB85FL, BIOS FLB8510H.86A.0019.2013.0606.1538 06/06/2013
-[432111.444237]  00007fff3e9ed7ff ffff8800966cdc08 ffffffff81715a64 ffffc90000000000
-[432111.444239]  ffff8800966cdc18 ffffffffa060e025 ffff8800966cdc30 ffffffffa060e0ad
-[432111.444241]  78ff88020dfbcc78 ffff8800966cdd40 ffffffffa021c3c0 ffff880000000000
-[432111.444243] Call Trace:
-[432111.444249]  [<ffffffff81715a64>] dump_stack+0x45/0x56
-[432111.444252]  [<ffffffffa060e025>] bar+0x25/0x80 [vm_img_lkm]
-[432111.444254]  [<ffffffffa060e0ad>] foo+0x2d/0x51 [vm_img_lkm]
-[432111.444256]  [<ffffffffa021c3c0>] vm_img_init+0x3c0/0x1000 [vm_img_lkm]
-[432111.444268]  [<ffffffffa0000000>] ? 0xffffffff9fffffff
-[432111.444271]  [<ffffffffa021c000>] ? 0xffffffffa021bfff
-[432111.444275]  [<ffffffff8100214a>] do_one_initcall+0xfa/0x1b0
-[432111.444277]  [<ffffffff810598d3>] ? set_memory_nx+0x43/0x50
-[432111.444281]  [<ffffffff810e1d4d>] load_module+0x12dd/0x1b40
-[432111.444285]  [<ffffffff810dd7d0>] ? store_uevent+0x40/0x40
-[432111.444287]  [<ffffffff810e2726>] SyS_finit_module+0x86/0xb0
-[432111.444290]  [<ffffffff8172663f>] tracesys+0xe1/0xe6
-[432111.444291] bar:41 : ---------------------------------------------------------------
-
-===============================================================================
 
  */
