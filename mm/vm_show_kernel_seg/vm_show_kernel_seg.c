@@ -164,25 +164,31 @@ static int __init vm_img_init(void)
 
 	pr_info (
     "\nSome Kernel Details [sorted by decreasing address] -------------------\n"
-	"FIXADDR_START       = 0x" FMTSPC "\n"
-	"MODULES_END         = 0x" FMTSPC "\n"
-	"MODULES_VADDR       = 0x" FMTSPC " [modules range: " FMTSPC_DEC " MB]\n"
-	"CPU_ENTRY_AREA_BASE = 0x" FMTSPC "\n"
-	"VMEMMAP_START       = 0x" FMTSPC "\n"
-	"VMALLOC_END         = 0x" FMTSPC "\n"
-	"VMALLOC_START       = 0x" FMTSPC " [vmalloc range: " FMTSPC_DEC " MB =" FMTSPC_DEC " GB]" "\n"
-	"PAGE_OFFSET         = 0x" FMTSPC " [start of all phy mapped RAM; lowmem]\n"
-    "TASK_SIZE           = 0x" FMTSPC " [size of userland]\n",
+#ifdef CONFIG_X86
+	" FIXADDR_START       = 0x" FMTSPC "\n"
+#endif
+	" MODULES_END         = 0x" FMTSPC "\n"
+	" MODULES_VADDR       = 0x" FMTSPC " [modules range: " FMTSPC_DEC " MB]\n"
+#ifdef CONFIG_X86
+	" CPU_ENTRY_AREA_BASE = 0x" FMTSPC "\n"
+	" VMEMMAP_START       = 0x" FMTSPC "\n"
+#endif
+	" VMALLOC_END         = 0x" FMTSPC "\n"
+	" VMALLOC_START       = 0x" FMTSPC " [vmalloc range: " FMTSPC_DEC " MB =" FMTSPC_DEC " GB]" "\n"
+	" PAGE_OFFSET         = 0x" FMTSPC " [lowmem region: start of all phy mapped RAM (here to RAM-size)]\n",
+#ifdef CONFIG_X86
 		(TYPECST)FIXADDR_START,
+#endif
 		(TYPECST)MODULES_END, (TYPECST)MODULES_VADDR,
 		 (TYPECST)((MODULES_END-MODULES_VADDR)/(1024*1024)),
+#ifdef CONFIG_X86
 		(TYPECST)CPU_ENTRY_AREA_BASE,
 		(TYPECST)VMEMMAP_START,
+#endif
 		(TYPECST)VMALLOC_END, (TYPECST)VMALLOC_START,
 		 (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024)), 
-         (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024*1024)),
-		(TYPECST)PAGE_OFFSET,
-		(TYPECST)TASK_SIZE);
+		 (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024*1024)),
+		(TYPECST)PAGE_OFFSET);
 
 #ifdef CONFIG_KASAN
 	pr_info("\nKASAN_SHADOW_START = 0x" FMTSPC " KASAN_SHADOW_END = 0x" FMTSPC "\n",
@@ -196,27 +202,29 @@ static int __init vm_img_init(void)
 
 	pr_info (
     "\nSome Process Details [sorted by decreasing address] ------------------\n"
-	" Statistics wrt 'current' [process/thread TGID=%d PID=%d name=%s]:\n"
-	"arg_end     = 0x" FMTSPC "\n"
-	"arg_start   = 0x" FMTSPC "\n"
-	"start_stack = 0x" FMTSPC "\n"
-	"curr brk    = 0x" FMTSPC "\n" 
-	"start_brk   = 0x" FMTSPC "\n"
-	"env_end     = 0x" FMTSPC "\n"
-	"env_start   = 0x" FMTSPC "\n"
-	"end_data    = 0x" FMTSPC "\n"
-	"start_data  = 0x" FMTSPC "\n" 
-	"end_code    = 0x" FMTSPC "\n"
-	"start_code  = 0x" FMTSPC "\n"
-	"# memory regions (VMAs) = %d\n",
+	" [TASK_SIZE         = 0x" FMTSPC " size of userland]\n"
+	" [Statistics wrt 'current' thread TGID=%d PID=%d name=%s]:\n"
+	"        env_end     = 0x" FMTSPC "\n"
+	"        env_start   = 0x" FMTSPC "\n"
+	"        arg_end     = 0x" FMTSPC "\n"
+	"        arg_start   = 0x" FMTSPC "\n"
+	"        start_stack = 0x" FMTSPC "\n"
+	"        curr brk    = 0x" FMTSPC "\n" 
+	"        start_brk   = 0x" FMTSPC "\n"
+	"        end_data    = 0x" FMTSPC "\n"
+	"        start_data  = 0x" FMTSPC "\n" 
+	"        end_code    = 0x" FMTSPC "\n"
+	"        start_code  = 0x" FMTSPC "\n"
+	" [# memory regions (VMAs) = %d]\n",
+		(TYPECST)TASK_SIZE,
 		current->tgid, current->pid, current->comm,
+		(TYPECST)current->mm->env_end,
+		(TYPECST)current->mm->env_start,
 		(TYPECST)current->mm->arg_end, 
 		(TYPECST)current->mm->arg_start,
 		(TYPECST)current->mm->start_stack,
 		(TYPECST)current->mm->brk,
 		(TYPECST)current->mm->start_brk,
-		(TYPECST)current->mm->env_end,
-		(TYPECST)current->mm->env_start,
 		(TYPECST)current->mm->end_data,
 		(TYPECST)current->mm->start_data,
 		(TYPECST)current->mm->end_code,
@@ -225,8 +233,8 @@ static int __init vm_img_init(void)
 
 	pr_info (
 	"\nSome sample kernel virtual addreses ---------------------\n" 
-     "&statgul = 0x" FMTSPC ", &jiffies_64 = 0x%08lx, &vg = 0x" FMTSPC "\n"
-	 "kptr = 0x" FMTSPC " vptr = 0x" FMTSPC "\n",
+	"&statgul = 0x" FMTSPC ", &jiffies_64 = 0x%08lx, &vg = 0x" FMTSPC "\n"
+	"kptr = 0x" FMTSPC " vptr = 0x" FMTSPC "\n",
 		(TYPECST)&statgul, (long unsigned int)&jiffies_64, (TYPECST)&vg,
 		(TYPECST)kptr, (TYPECST)vptr);
 
