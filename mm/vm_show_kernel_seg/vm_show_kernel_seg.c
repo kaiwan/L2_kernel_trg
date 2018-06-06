@@ -84,15 +84,36 @@ static int __init vm_img_init(void)
 {
    int knum=512,disp=32;
 
+   pr_info("Platform:\n");
+#ifdef CONFIG_X86
+ #if(BITS_PER_LONG == 32)
+	pr_info(" x86-32 : ");
+ #else
+	pr_info(" x86_64 : ");
+ #endif
+#endif
+#ifdef CONFIG_ARM
+	pr_info(" ARM-32 : ");
+#endif
+#ifdef CONFIG_ARM64
+	pr_info(" ARM64 : ");
+#endif
+#ifdef CONFIG_MIPS
+	pr_info(" MIPS : ");
+#endif
+#ifdef CONFIG_PPC
+	pr_info(" PPC : ");
+#endif
+
 #if(BITS_PER_LONG == 32)
-	pr_info ("32-bit OS ");
+	pr_info (" 32-bit OS ");
 #elif(BITS_PER_LONG == 64)
-	pr_info ("64-bit OS ");
+	pr_info (" 64-bit OS ");
 #endif
 #ifdef __BIG_ENDIAN  // just for the heck of it..
-	pr_info("Big-endian.\n");
+	pr_info(" Big-endian.\n");
 #else
-	pr_info("Little-endian.\n");
+	pr_info(" Little-endian.\n");
 #endif
 
 	/* Ha! When using "%d" etc for sizeof(), the compiler would complain:
@@ -100,7 +121,8 @@ static int __init vm_img_init(void)
 	 * argument 5 has type ‘long unsigned int’ [-Wformat=] ...
 	 * Turns out we shoud use "%zu" to correctly represent size_t (which sizeof operator returns)!
 	 */
-	pr_info ("sizeof(int)=%zu, sizeof(long)=%zu sizeof(void *)=%zu\nsizeof(u64 *)=%zu\n", 
+	pr_info (" sizeof(int)   =%zu, sizeof(long) =%zu\n"
+		 " sizeof(void *)=%zu, sizeof(u64 *)=%zu\n", 
 		sizeof(int), sizeof(long), sizeof(void *), sizeof(u64 *));
 
 	kptr = kmalloc (knum, GFP_KERNEL);
