@@ -21,23 +21,20 @@
 #include "convenient.h"  // adjust path as required
 
 #if(BITS_PER_LONG == 32)
-	#define FMTSPC "%08x"
-	#define FMTSPC_DEC "%08d"
-	#define TYPECST unsigned int
-    #define MY_PATTERN1   0xdeadface
-    #define MY_PATTERN2   0xffeeddcc
+	#define FMTSPC		"%08x"
+	#define FMTSPC_DEC	"%08d"
+	#define TYPECST		unsigned int
+	#define MY_PATTERN1     0xdeadface
+	#define MY_PATTERN2     0xffeeddcc
 #elif(BITS_PER_LONG == 64)
-	#define FMTSPC "%016lx"
-	#define FMTSPC_DEC "%ld"
-	#define TYPECST unsigned long
-    #define MY_PATTERN1   0xdeadfacedeadface
-    #define MY_PATTERN2   0xffeeddccbbaa9988
+	#define FMTSPC		"%016lx"
+	#define FMTSPC_DEC	"%ld"
+	#define TYPECST	        unsigned long
+	#define MY_PATTERN1     0xdeadfacedeadface
+	#define MY_PATTERN2     0xffeeddccbbaa9988
 #endif
 
 static unsigned int statgul;
-u32 guinit;
-u32 ginit=0x5;
-static int statint=0x1000;
 
 void bar(void)
 {
@@ -125,7 +122,7 @@ static int __init vm_img_init(void)
 		 " sizeof(void *)=%zu, sizeof(u64 *)=%zu\n", 
 		sizeof(int), sizeof(long), sizeof(void *), sizeof(u64 *));
 
-	kptr = kmalloc (knum, GFP_KERNEL);
+	kptr = kmalloc(knum, GFP_KERNEL);
 	if (!kptr) {
 		pr_alert("kmalloc failed!\n");
 		return -ENOMEM;
@@ -150,9 +147,9 @@ static int __init vm_img_init(void)
 	 */
 	pr_info("kmalloc'ed memory dump (%d bytes @ %pK):\n", disp, kptr);
 	mempattern(kptr, MY_PATTERN1, knum);
-	print_hex_dump_bytes ("", DUMP_PREFIX_ADDRESS, kptr, disp);
+	print_hex_dump_bytes("", DUMP_PREFIX_ADDRESS, kptr, disp);
 
-	vptr = vmalloc (42*PAGE_SIZE);
+	vptr = vmalloc(42*PAGE_SIZE);
 	if (!vptr) {
 		pr_alert("vmalloc failed!\n");
 		kfree(kptr);
@@ -160,7 +157,7 @@ static int __init vm_img_init(void)
 	}
 	mempattern(vptr, MY_PATTERN2, PAGE_SIZE);
 	pr_info("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
-	print_hex_dump_bytes ("", DUMP_PREFIX_ADDRESS, vptr, disp);
+	print_hex_dump_bytes("", DUMP_PREFIX_ADDRESS, vptr, disp);
 
 	pr_info (
     "\nSome Kernel Details [sorted by decreasing address] -------------------\n"
