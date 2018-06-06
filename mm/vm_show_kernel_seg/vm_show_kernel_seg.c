@@ -140,34 +140,71 @@ static int __init vm_img_init(void)
 	MSG("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
 	print_hex_dump_bytes ("", DUMP_PREFIX_ADDRESS, vptr, disp);
 
-	MSG ("Statistics wrt 'current'  [which right now is the process/thread TGID %d PID %d name %s]:\n"
-    "\nSome Kernel Details --------------------\n"
-	"PAGE_OFFSET [start of all phy mapped RAM] = 0x" FMTSPC "\n" 
-    "TASK_SIZE=0x" FMTSPC "\n"
-	"VMALLOC_START = 0x" FMTSPC " VMALLOC_END=0x" FMTSPC " : vmalloc range: " FMTSPC_DEC " MB [=" 
-       FMTSPC_DEC " GB]" "\n"
-	"MODULES_VADDR = 0x" FMTSPC " MODULES_END=0x" FMTSPC " : modules range: " FMTSPC_DEC " MB" "\n"
-    "\nSome Process Details --------------------\n"
-	"start_code = 0x" FMTSPC ", end_code = 0x" FMTSPC ", start_data = 0x" FMTSPC ", end_data = 0x" FMTSPC "\n"
-	"start_brk  = 0x" FMTSPC ", brk = 0x" FMTSPC ", start_stack = 0x" FMTSPC "\n"
-	"arg_start  = 0x" FMTSPC ", arg_end = 0x" FMTSPC ", env_start = 0x" FMTSPC ", env_end = 0x" FMTSPC "\n"
-	"# memory regions (VMAs) = %d\n"
+	pr_info (
+    "\nSome Kernel Details [sorted by decreasing address] -------------------\n"
+	"FIXADDR_START       = 0x" FMTSPC "\n"
+	"MODULES_END         = 0x" FMTSPC "\n"
+	"MODULES_VADDR       = 0x" FMTSPC " [modules range: " FMTSPC_DEC " MB]\n"
+	"CPU_ENTRY_AREA_BASE = 0x" FMTSPC "\n"
+	"VMEMMAP_START       = 0x" FMTSPC "\n"
+	"VMALLOC_END         = 0x" FMTSPC "\n"
+	"VMALLOC_START       = 0x" FMTSPC " [vmalloc range: " FMTSPC_DEC " MB =" FMTSPC_DEC " GB]" "\n"
+	"PAGE_OFFSET         = 0x" FMTSPC " [start of all phy mapped RAM; lowmem]\n"
+    "TASK_SIZE           = 0x" FMTSPC " [size of userland]\n",
+		(TYPECST)FIXADDR_START,
+		(TYPECST)MODULES_END, (TYPECST)MODULES_VADDR,
+		 (TYPECST)((MODULES_END-MODULES_VADDR)/(1024*1024)),
+		(TYPECST)CPU_ENTRY_AREA_BASE,
+		(TYPECST)VMEMMAP_START,
+		(TYPECST)VMALLOC_END, (TYPECST)VMALLOC_START,
+		 (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024)), 
+         (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024*1024)),
+		(TYPECST)PAGE_OFFSET,
+		(TYPECST)TASK_SIZE);
+
+#ifdef CONFIG_KASAN
+	pr_info("\nKASAN_SHADOW_START = 0x" FMTSPC " KASAN_SHADOW_END = 0x" FMTSPC "\n",
+		(TYPECST)KASAN_SHADOW_START, (TYPECST)KASAN_SHADOW_END);
+#endif
+	/* 
+	 * arch/x86/mm/dump_pagetables.c:address_markers[] array of structs would
+	 * be useful to dump, but it's private
+	pr_info("address_markers = 0x" FMTSPC FMTSPC "\n", address_markers);
+	 */
+
+	pr_info (
+    "\nSome Process Details [sorted by decreasing address] ------------------\n"
+	" Statistics wrt 'current' [process/thread TGID=%d PID=%d name=%s]:\n"
+	"arg_end     = 0x" FMTSPC "\n"
+	"arg_start   = 0x" FMTSPC "\n"
+	"start_stack = 0x" FMTSPC "\n"
+	"curr brk    = 0x" FMTSPC "\n" 
+	"start_brk   = 0x" FMTSPC "\n"
+	"env_end     = 0x" FMTSPC "\n"
+	"env_start   = 0x" FMTSPC "\n"
+	"end_data    = 0x" FMTSPC "\n"
+	"start_data  = 0x" FMTSPC "\n" 
+	"end_code    = 0x" FMTSPC "\n"
+	"start_code  = 0x" FMTSPC "\n"
+	"# memory regions (VMAs) = %d\n",
+		current->tgid, current->pid, current->comm,
+		(TYPECST)current->mm->arg_end, 
+		(TYPECST)current->mm->arg_start,
+		(TYPECST)current->mm->start_stack,
+		(TYPECST)current->mm->brk,
+		(TYPECST)current->mm->start_brk,
+		(TYPECST)current->mm->env_end,
+		(TYPECST)current->mm->env_start,
+		(TYPECST)current->mm->end_data,
+		(TYPECST)current->mm->start_data,
+		(TYPECST)current->mm->end_code,
+		(TYPECST)current->mm->start_code,
+		current->mm->map_count);
+
+	pr_info (
 	"\nSome sample kernel virtual addreses ---------------------\n" 
      "&statgul = 0x" FMTSPC ", &jiffies_64 = 0x%08lx, &vg = 0x" FMTSPC "\n"
 	 "kptr = 0x" FMTSPC " vptr = 0x" FMTSPC "\n",
-		current->tgid, current->pid, current->comm,
-		(TYPECST)PAGE_OFFSET, (TYPECST)TASK_SIZE,
-		(TYPECST)VMALLOC_START, (TYPECST)VMALLOC_END,
-		(TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024)), 
-         (TYPECST)((VMALLOC_END-VMALLOC_START)/(1024*1024*1024)),
-		(TYPECST)MODULES_VADDR, (TYPECST)MODULES_END,
-		(TYPECST)((MODULES_END-MODULES_VADDR)/(1024*1024)),
-		(TYPECST)current->mm->start_code, (TYPECST)current->mm->end_code,
-		(TYPECST)current->mm->start_data, (TYPECST)current->mm->end_data,
-		(TYPECST)current->mm->start_brk, (TYPECST)current->mm->brk, (TYPECST)current->mm->start_stack,
-		(TYPECST)current->mm->arg_start, (TYPECST)current->mm->arg_end, 
-		(TYPECST)current->mm->env_start, (TYPECST)current->mm->env_end,
-		current->mm->map_count,
 		(TYPECST)&statgul, (long unsigned int)&jiffies_64, (TYPECST)&vg,
 		(TYPECST)kptr, (TYPECST)vptr);
 
