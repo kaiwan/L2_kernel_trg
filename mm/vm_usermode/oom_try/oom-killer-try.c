@@ -37,7 +37,7 @@ static void see_maps(void)
 		getpid());
 	s = system(cmd);
 	if (s == -1) {
-		perror("system");	// when memory runs short, we get: "system: Cannot allocate memory" msg..
+		perror("system");// when memory runs short, we get: "system: Cannot allocate memory" msg..
 	}
 	fflush(stdout);
 #endif
@@ -66,9 +66,9 @@ int main(int argc, char **argv)
 
 	do {
 		p = (char *)malloc(BLK);
-		if (verbose)
-			printf("%06d\taddr p = %p   break = %p\n", ++i,
-			       (void *)p, (void *)sbrk(0));
+		if (verbose && !(i % stepval)) 	// every 'stepval' iterations..
+			printf("%06d\taddr p = %p   break = %p\n",
+				i, (void *)p, (void *)sbrk(0));
 		if (!p) {
 			fprintf(stderr, "%s: loop #%d: malloc failure.\n",
 				argv[0], i);
@@ -88,7 +88,6 @@ int main(int argc, char **argv)
 		}
 
 		if (!(i % stepval)) {	// every 'stepval' iterations..
-			printf("%d...\n", i);
 			see_maps();
 			//usleep(250000);       // 250ms; to have time for sampling free mem..
 		}
@@ -98,6 +97,7 @@ int main(int argc, char **argv)
 	see_maps();
 	return 0;
 }
+
 
 /***************************************************
 -------------- Sample Runs: ----------------------
