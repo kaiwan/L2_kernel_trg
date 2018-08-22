@@ -16,7 +16,7 @@
 #include <linux/version.h>
 #include <linux/highmem.h>
 #include <linux/slab.h>
-#include "../../../convenient.h"
+#include "../../convenient.h"
 
 #define DRVNAME "slab_custom"
 #define MYBUFSZ 350         //-- using size '350' seems to give us a new private slab cache

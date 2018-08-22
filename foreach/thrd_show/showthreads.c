@@ -31,7 +31,7 @@ static void showthrds(void)
 		task_lock(t);
 
 		snprintf(buf, 256, "%6d %6d ", g->tgid, t->pid);
-		if (!g->mm) { // kernel thread
+		if (!g->mm) {       // kernel thread
 			 snprintf(tmp, 128, "[%30s]", t->comm);
 		} else {
 			 snprintf(tmp, 128, " %30s ", t->comm);
