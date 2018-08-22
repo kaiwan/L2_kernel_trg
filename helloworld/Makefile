@@ -21,9 +21,9 @@ clean:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
 
 else
-
-  $(info Building for ARCH ${ARCH} and KERNELRELEASE ${KERNELRELEASE}) 
   EXTRA_CFLAGS += -DDEBUG #-DUSE_FTRACE_PRINT
+  $(info @@@ Building for ARCH=${ARCH}, CROSS_COMPILE=${CROSS_COMPILE}, KERNELRELEASE=${KERNELRELEASE}; EXTRA_CFLAGS=${EXTRA_CFLAGS} @@@)
+  
   obj-m :=    hello.o
 
 endif
