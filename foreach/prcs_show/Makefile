@@ -6,7 +6,7 @@ ifeq ($(KERNELRELEASE),)
 # make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- 
 ifeq ($(ARCH),arm)
 # Update 'KDIR' below to point to the ARM Linux kernel source tree
-KDIR ?= ~/ARM_Balau/linux-3.2.11
+KDIR ?= ~/linux-3.2.11
 else
 KDIR ?= /lib/modules/$(shell uname -r)/build 
 endif
@@ -24,7 +24,8 @@ clean:
 	$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean
 
 else
-$(info Building with KERNELRELEASE = ${KERNELRELEASE}) 
-EXTRA_CFLAGS += -DDEBUG
-obj-m :=    foreach.o  
+
+  EXTRA_CFLAGS += -DDEBUG #-DUSE_FTRACE_PRINT
+  $(info @@@ Building for ARCH=${ARCH}, CROSS_COMPILE=${CROSS_COMPILE}, KERNELRELEASE=${KERNELRELEASE}; EXTRA_CFLAGS=${EXTRA_CFLAGS} @@@)
+  obj-m := foreach.o  
 endif
