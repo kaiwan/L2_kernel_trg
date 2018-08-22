@@ -197,6 +197,8 @@ static int __init vm_img_init(void)
 	pr_info("address_markers = 0x" FMTSPC FMTSPC "\n", address_markers);
 	 */
 
+	pr_info("\n");
+	PRINT_CTX();       // see the convenient.h header
 	pr_info (
     "\nSome Process Details [sorted by decreasing address] ------------------\n"
 	" [TASK_SIZE         = 0x" FMTSPC " size of userland]\n"
