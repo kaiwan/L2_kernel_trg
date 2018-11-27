@@ -49,27 +49,29 @@ void foo(void)
 	bar();
 }
 
+static char gPattern1[] = {0xde, 0xad, 0xfa, 0xce,
+	                  0xde, 0xad, 0xfa, 0xce};
+static char gPattern2[] = {0x88, 0x99, 0xaa, 0xbb,
+	                  0xcc, 0xdd, 0xee, 0xff};
+
 // Init mem to a pattern (like 0xdead 0xface .... ....)
-static inline void mempattern(
- void *pdest, 
-#if(BITS_PER_LONG == 32)
- u32 pattern, 
-#elif(BITS_PER_LONG == 64)
- u64 pattern, 
-#endif
- int len)
+static void mempattern( void *pdest, char *pattern, int len)
 {
-	int i;
+	int i=0;
 #if(BITS_PER_LONG == 32)
 	u32 *pattptr = (u32 *)pdest;
-	for (i=0; i < len/sizeof(u32 *); i++)
 #elif(BITS_PER_LONG == 64)
 	u64 *pattptr = (u64 *)pdest;
+#endif
+
+#if(BITS_PER_LONG == 32)
+	for (i=0; i < len/sizeof(u32 *); i++)
+#elif(BITS_PER_LONG == 64)
 	for (i=0; i < len/sizeof(u64 *); i++)
 #endif
-                          {
+    {
 		//pr_info("pattptr=%pK\n", pattptr);
-		*pattptr = pattern;
+		memcpy(pattptr, pattern, sizeof(void *));
 		pattptr ++;
 	}
 }
@@ -79,7 +81,7 @@ volatile static	u32 vg=0x1234abcd;
 
 static int __init vm_img_init(void)
 {
-   int knum=512,disp=32;
+   int knum=512, disp=32;
 
    pr_info("Platform:\n");
 #ifdef CONFIG_X86
@@ -122,9 +124,9 @@ static int __init vm_img_init(void)
 		 " sizeof(void *)=%zu, sizeof(u64 *)=%zu\n", 
 		sizeof(int), sizeof(long), sizeof(void *), sizeof(u64 *));
 
-	kptr = kmalloc(knum, GFP_KERNEL);
+	kptr = kzalloc(knum, GFP_KERNEL);
 	if (!kptr) {
-		pr_alert("kmalloc failed!\n");
+		pr_alert("kzalloc failed!\n");
 		return -ENOMEM;
 	}
 	/*
@@ -146,8 +148,8 @@ static int __init vm_img_init(void)
 	 * See https://www.kernel.org/doc/Documentation/printk-formats.txt
 	 */
 	pr_info("kmalloc'ed memory dump (%d bytes @ %pK):\n", disp, kptr);
-	mempattern(kptr, MY_PATTERN1, knum);
-	print_hex_dump_bytes("", DUMP_PREFIX_ADDRESS, kptr, disp);
+	mempattern(kptr, &gPattern1[0], knum);
+	print_hex_dump_bytes("kptr: ", DUMP_PREFIX_ADDRESS, kptr, disp);
 
 	vptr = vmalloc(42*PAGE_SIZE);
 	if (!vptr) {
@@ -155,9 +157,10 @@ static int __init vm_img_init(void)
 		kfree(kptr);
 		return -ENOMEM;
 	}
-	mempattern(vptr, MY_PATTERN2, PAGE_SIZE);
+
+	mempattern(vptr, &gPattern2[0], PAGE_SIZE);
 	pr_info("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
-	print_hex_dump_bytes("", DUMP_PREFIX_ADDRESS, vptr, disp);
+	print_hex_dump_bytes("vptr: ", DUMP_PREFIX_ADDRESS, vptr, disp);
 
 	pr_info (
     "\nSome Kernel Details [sorted by decreasing address] -------------------\n"
