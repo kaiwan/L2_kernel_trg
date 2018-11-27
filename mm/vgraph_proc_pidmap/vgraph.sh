@@ -408,6 +408,11 @@ start()
  exit 0
 }
 
+which bc >/dev/null || {
+  echo "${name}: 'bc' utility missing, pl install and retry. Aborting..."
+  exit 1
+}
+
 [ $# -ne 1 ] && {
   echo "Usage: ${name} input-CSV-filename(3 column format)"
   exit 1
