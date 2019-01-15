@@ -56,7 +56,7 @@
            pr_info(pr_fmt(string), ##args);                        \
 } while (0)
 #endif
-#endif				/* end ifdef __KERNEL__ at the top */
+#endif				/* #ifdef __KERNEL__ */
 
 /*------------------------ MSG, QP ------------------------------------*/
 #ifdef DEBUG
@@ -186,7 +186,7 @@
 #ifdef __KERNEL__
 #define assert(expr) do {                                               \
  if (!(expr)) {                                                         \
-  DBGPRINT("********** Assertion [%s] failed! : %s:%s:%d **********\n", \
+  pr_warn("********** Assertion [%s] failed! : %s:%s:%d **********\n",  \
    #expr, __FILE__, __func__, __LINE__);                                \
  }                                                                      \
 } while(0)
@@ -196,7 +196,7 @@
 static inline void beep(int what)
 {
 #ifdef __KERNEL__
-	DBGPRINT("%c", (char)what);
+	pr_info("%c", (char)what);
 #else
 	char buf=(char)what;
 	(void)write(STDOUT_FILENO, &buf, 1);
@@ -210,13 +210,13 @@ static inline void beep(int what)
  */
 #define DELAY_LOOP(val,loop_count)                                             \
 {                                                                              \
-	int c=0, m;                                                            \
+	int c = 0, m;                                                          \
 	unsigned int for_index,inner_index;                                    \
 	                                                                       \
-	for(for_index=0;for_index<loop_count;for_index++) {                    \
+	for (for_index=0;for_index<loop_count;for_index++) {                   \
 		beep((val));                                                   \
 		c++;                                                           \
-		for(inner_index=0;inner_index<HZ*1000*8;inner_index++)         \
+		for (inner_index=0;inner_index<HZ*1000*8;inner_index++)        \
 			for(m=0;m<50;m++);                                     \
 		}                                                              \
 	/*printf("c=%d\n",c);*/                                                \
@@ -231,10 +231,10 @@ static inline void beep(int what)
 #define DELAY_SEC(val)                                  \
 {                                                       \
 	if (!in_interrupt()) {	                        \
-		set_current_state (TASK_INTERRUPTIBLE); \
-		schedule_timeout (val * HZ);            \
+		set_current_state(TASK_INTERRUPTIBLE);  \
+		schedule_timeout(val * HZ);             \
 	}	                                        \
 }
 #endif
 
-#endif
+#endif   /* #ifndef __CONVENIENT_H__ */
