@@ -1,0 +1,29 @@
+#!/bin/bash
+# vasu_graph
+# A simple Virtual Address Space - Usermode - Graphing (uvas_graph)
+# visualization utility
+name=$(basename $0)
+[ $# -ne 1 ] && {
+ echo "Usage: ${name} PID-of-process-to-map"
+ exit 1
+}
+ 
+[ ! -f ./do_vgraph.sh ] && {
+ echo "${name}: do_vgraph.sh missing? Aborting..."
+ exit 1
+}
+[ ! -f ./prep_mapsfile.sh ] && {
+ echo "${name}: prep_mapsfile.sh missing? Aborting..."
+ exit 1
+}
+# Check for process existence
+sudo kill -0 $1 >/dev/null 2>&1 || {
+ echo "${name}: PID \"$1\" invalid (or dead now?) Aborting..."
+ exit 1
+}
+
+TMPCSV=/tmp/vgrph.csv
+./prep_mapsfile.sh $1 ${TMPCSV} || exit 1
+./do_vgraph.sh ${TMPCSV}
+rm -f ${TMPCSV}
+exit 0
