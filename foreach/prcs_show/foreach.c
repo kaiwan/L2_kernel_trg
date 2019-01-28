@@ -12,7 +12,11 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/sched.h>	/* current, jiffies */
+
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,11,0)
 #include <linux/sched/signal.h>	/* for_each_xxx, ... */
+#endif
 #include <linux/fs.h>		/* no_llseek */
 #include <linux/slab.h>
 #include <linux/uaccess.h>	/* copy_to_user() */
