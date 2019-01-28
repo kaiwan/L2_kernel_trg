@@ -1,7 +1,9 @@
 #!/bin/bash
-# vgraph.sh
+# do_vgraph.sh
 # 
 # Quick Description:
+# Support script for the vasu_graph project; really, it's where the stuff
+# actually happens :)
 # "Draw" out, (somewhat) to scale, ranges of numbers in a vertically tiled 
 # format. For eg.: the output of /proc/iomem, /proc/vmalloc, 
 # /proc/<.pid>/maps, etc etc
@@ -32,17 +34,14 @@
 # - check input file for correct format
 # - write to SVG !
 #
-# Last Updated : 30july2017
-# Created      : 26july2017
+# Last Updated : 28jan2019
+# Created      : 26jul2017
 # 
 # Author:
 # Kaiwan N Billimoria
 # kaiwan -at- kaiwantech -dot- com
 # kaiwanTECH
-# 
-# License:
-# MIT License.
-# 
+# License: MIT.
 name=$(basename $0)
 source ./common.sh || {
  echo "${name}: fatal: could not source common.sh , aborting..."
