@@ -1,37 +1,25 @@
 #!/bin/bash
-# .sh
+# prep_mapsfile.sh
 # 
 # Quick Description:
-# Support script for the vgraph project.
-# 
-# Last Updated :
-# Created      :
+# Support script for the vasu_graph project.
 # 
 # Author:
 # Kaiwan N Billimoria
 # kaiwan -at- kaiwantech -dot- com
 # kaiwanTECH
 # 
-# License:
-# MIT License.
-# 
+# License: # MIT License.
 name=$(basename $0)
 source ./common.sh || {
  echo "${name}: fatal: could not source common.sh , aborting..."
  exit 1
 }
 
-########### Globals follow #########################
-# Style: gNameOfGlobalVar
-
-
-########### Functions follow #######################
-
-
 TMPF=/tmp/.$$
 start()
 {
-awk '{print $1, $6}' ${infile} > ${TMPF}
+sudo awk '{print $1, $6}' ${infile} > ${TMPF}
 sed --in-place 's/-/,/' ${TMPF}
 sed --in-place 's/ /,/' ${TMPF}
 # del comment lines
