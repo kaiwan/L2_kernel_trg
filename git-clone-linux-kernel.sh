@@ -31,6 +31,12 @@ if [ ${REGULAR_TREE} -eq 0 -a ${LINUX_NEXT_TREE} -eq 1 ] ; then
   NEW_BRANCH=$1
 fi
 
+[ -d .git ] && {
+ echo "${name}: whoops, this dir already has a .git working folder. Continue here or abort?
+  [Enter] to continue, ^C to abort"
+  read x
+}
+
 [ ${REGULAR_TREE} -eq 1 ] && {
   GITURL=https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
   echo "${name}: cloning 'regular' linux kernel now ... (this can take a while)..."
