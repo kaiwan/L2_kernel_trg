@@ -4,7 +4,7 @@ ifeq ($(KERNELRELEASE),)
   # make ARCH=arm CROSS_COMPILE=arm-none-linux-gnueabi- 
   ifeq ($(ARCH),arm)
     # *UPDATE* 'KDIR' below to point to the ARM Linux kernel source tree on your box
-    KDIR ?= ~/3.14.34
+    KDIR ?= ~/rpi_work/kernel_rpi/
   else
     KDIR ?= /lib/modules/$(shell uname -r)/build 
   endif
