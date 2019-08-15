@@ -1,3 +1,14 @@
+/*
+ * taskdtl.c
+ ****************************************************************
+ * Brief Description:
+ * This kernel module, given the PID of a thread/process as parameter,
+ * gains access to it's task structure and prints some relevant info
+ * from it to the kernel log (includes some arch-specific detail as well).
+ *
+ * Author: (c) Kaiwan N Billimoria <kaiwan dot billimoria -at- gmail dot com>
+ * License: MIT / GPL
+ */
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/sched.h>     /* current */
@@ -16,6 +27,11 @@
 
 MODULE_LICENSE("Dual MIT/GPL");
 
+#define MODNAME    "taskdtl"
+static int pid;
+module_param(pid, int, 0);
+MODULE_PARM_DESC(pid, "set this to the PID of the process or thread to dump task info about");
+
 static int disp_task_details(struct task_struct *p)
 {
 	char *pol=NULL;
@@ -32,11 +48,13 @@ static int disp_task_details(struct task_struct *p)
 		" ", __kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
 		" ", __kuid_val(p->loginuid));
 
+#if 0
 #ifdef CONFIG_ARM64
 	u64 sp_el0;
 	asm ("mrs %0, sp_el0" : "=r" (sp_el0));
 	pr_info(" arm64: sp_el0 holds task ptr (value is 0x%lx)\n", sp_el0);
 #endif /* CONFIG_X86_64 */
+#endif
 
 	/* Task state */
 	pr_info("Task state (%d) : ", p->state);
@@ -196,25 +214,31 @@ static int disp_task_details(struct task_struct *p)
 		/* userspace mappings */
 		//spin_lock(&p->mm->arg_lock);
 		pr_info(
-			"mm userspace mapings (high to low) ::\n"
-			" env        : 0x%lx - 0x%lx  [%6u bytes]\n"
-			" args       : 0x%lx - 0x%lx  [%6u bytes]\n"
-			" start stack: 0x%lx\n"
-			" heap       : 0x%lx - 0x%lx  [%6u KB]\n"
-			" data       : 0x%lx - 0x%lx  [%6u KB]\n"
-			" code       : 0x%lx - 0x%lx  [%6u KB]\n"
-			,
-			p->mm->env_start, p->mm->env_end,
-			p->mm->env_end - p->mm->env_start,
-			p->mm->arg_start, p->mm->arg_end,
-			p->mm->arg_end - p->mm->arg_start,
-			p->mm->start_stack,
-			p->mm->start_brk, p->mm->brk,
-			(p->mm->brk - p->mm->start_brk)/1024,
-			p->mm->start_data, p->mm->end_data,
-			(p->mm->end_data - p->mm->start_data)/1024,
-			p->mm->start_code, p->mm->end_data,
-			(p->mm->end_data - p->mm->start_code)/1024
+		"mm userspace mapings (high to low) ::\n"
+		" env        : 0x%lx - 0x%lx  [%6u bytes]\n"
+		" args       : 0x%lx - 0x%lx  [%6u bytes]\n"
+	//	" stack      : 0x%lx - 0x%lx  [%6u bytes]\n"
+		" start stack: 0x%lx\n"
+		" heap       : 0x%lx - 0x%lx  [%6u KB, %6u MB]\n"
+		" data       : 0x%lx - 0x%lx  [%6u KB, %6u MB]\n"
+		" code       : 0x%lx - 0x%lx  [%6u KB, %6u MB]\n"
+		,
+		p->mm->env_start, p->mm->env_end,
+		p->mm->env_end - p->mm->env_start,
+		p->mm->arg_start, p->mm->arg_end,
+		p->mm->arg_end - p->mm->arg_start,
+		//p->mm->start_stack, p->mm->arg_start,
+		//p->mm->arg_start - p->mm->start_stack,
+		p->mm->start_stack,
+		p->mm->start_brk, p->mm->brk,
+		(p->mm->brk - p->mm->start_brk)/1024,
+		(p->mm->brk - p->mm->start_brk)/(1024*1024),
+		p->mm->start_data, p->mm->end_data,
+		(p->mm->end_data - p->mm->start_data)/1024,
+		(p->mm->end_data - p->mm->start_data)/(1024*1024),
+		p->mm->start_code, p->mm->end_data,
+		(p->mm->end_data - p->mm->start_code)/1024,
+		(p->mm->end_data - p->mm->start_code)/(1024*1024)
 		);
 		//spin_unlock(&p->mm->arg_lock);
 	} else
@@ -239,8 +263,8 @@ static int disp_task_details(struct task_struct *p)
 #ifdef CONFIG_TASK_XACCT
 	" # read syscalls          : %7llu\n"
 	" # write syscalls         : %7llu\n"
-	" accumulated RSS usage     : %9llu (%6llu KB)\n"  // bytes ??
-	" accumulated  VM usage     : %9llu (%6llu KB)\n"  // bytes ??
+	" accumulated RSS usage    : %9llu (%6llu KB)\n"  // bytes ??
+	" accumulated  VM usage    : %9llu (%6llu KB)\n"  // bytes ??
 #endif
 #ifdef CONFIG_PSI
 	"pressure stall state flags: 0x%lx\n"
@@ -274,9 +298,10 @@ static int disp_task_details(struct task_struct *p)
 
 	/* thread struct : cpu-specific hardware context */
 	pr_info(
-	"Hardware ctx info location is thread_info : 0x%lx\n"
+	"Hardware ctx info location is thread struct: 0x%lx\n"
 #ifdef CONFIG_X86_64
 	"X86_64 ::\n"
+	" thrd info: 0x%lx\n"
 	"  sp  : 0x%lx\n"
 	"  es  : 0x%x, ds  : 0x%x\n"
 	"  cr2 : 0x%lx, trap #  : 0x%lx, error code  :  0x%lx\n"
@@ -303,6 +328,7 @@ static int disp_task_details(struct task_struct *p)
 	,
 	&(p->thread),
 #ifdef CONFIG_X86_64
+	ti,
 	p->thread.sp,
 	p->thread.es, p->thread.ds,
 	p->thread.cr2, p->thread.trap_nr, p->thread.error_code,
@@ -333,13 +359,25 @@ static int disp_task_details(struct task_struct *p)
 
 static int __init taskdtl_init(void)
 {
-	disp_task_details(current);
-	return 0;	// success
+	struct task_struct *tp;
+	
+	if (0 == pid) {
+		pr_err("%s: pl pass a valid PID as parameter to this kernel module\n", MODNAME);
+		return -EINVAL;
+	}
+	tp = pid_task(find_vpid(pid), PIDTYPE_PID);
+	if (!tp) {
+		pr_err("%s: failed to obtain task struct pointer for PID %d\n",
+			MODNAME, pid);
+		return -EINVAL;
+	}
+	pr_debug("pid=%d, tp = 0x%lx\n", pid, tp);
+	disp_task_details(tp);
+	return 0;
 }
 static void __exit taskdtl_exit(void)
 {
-	pr_info("exit: Process context :: %s PID %d\n", 
-		current->comm, current->pid);
+	pr_info("%s: exiting now\n", MODNAME);
 #if 0
     dump_stack();
 #endif
