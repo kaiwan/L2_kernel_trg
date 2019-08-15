@@ -1,33 +1,47 @@
 #include <linux/init.h>
 #include <linux/module.h>
-#include <linux/sched.h>     // current
-#include <linux/vmalloc.h>
+#include <linux/sched.h>     /* current */
+
+#include <linux/vmalloc.h>   /* gcc err "dereferencing pointer to incomplete type" if not included */
+#include <linux/mm_types.h>
+
 #include <linux/version.h>
 #if LINUX_VERSION_CODE > KERNEL_VERSION(4, 10, 0)
 #include <linux/sched/signal.h>
 #endif
 
+#include <linux/mm.h>
+#include <linux/atomic.h>
+#include <linux/spinlock.h>
+
 MODULE_LICENSE("Dual MIT/GPL");
 
 static int disp_task_details(struct task_struct *p)
 {
-	//struct task_struct *p = current;
 	char *pol=NULL;
+	struct thread_info *ti = task_thread_info(p);
 
 	task_lock(p);
 
 	/* Task PID, ownership */
-	pr_info("Process / Thread :: %s : TGID %d, PID %d\n"
-		" RealUID : %d, EffUID : %d\n"
-		" login UID  : %d\n",
-		p->comm, p->tgid, p->pid,
-		__kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
-		__kuid_val(p->loginuid));
+	pr_info("Task struct @ 0x%lx ::\n"
+		"Process/Thread: %16s, TGID %6d, PID %6d\n"
+		"%26sRealUID    : %6d, EffUID : %6d\n"
+		"%26slogin UID  : %6d\n",
+		p, p->comm, p->tgid, p->pid,
+		" ", __kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
+		" ", __kuid_val(p->loginuid));
+
+#ifdef CONFIG_ARM64
+	u64 sp_el0;
+	asm ("mrs %0, sp_el0" : "=r" (sp_el0));
+	pr_info(" arm64: sp_el0 holds task ptr (value is 0x%lx)\n", sp_el0);
+#endif /* CONFIG_X86_64 */
 
 	/* Task state */
-	pr_info("Task state (%d) ::\n", p->state);
+	pr_info("Task state (%d) : ", p->state);
 	switch (p->state) {
-	case TASK_RUNNING : pr_info(" R : ready-to-run (on rq) OR running (on cpu)\n");
+	case TASK_RUNNING : pr_info(" R: ready-to-run (on rq) OR running (on cpu)\n");
 			    break;
 	case TASK_INTERRUPTIBLE : pr_info(" S: interruptible sleep\n");
 			    break;
@@ -49,33 +63,40 @@ static int disp_task_details(struct task_struct *p)
 			    break;
 	case TASK_NEW : pr_info(" .: NEW\n");
 			    break;
-	default : pr_info(" <unknown>\n");
+	default : pr_info(" ? <unknown>\n");
+	}
+
+	if (!ti)
+		pr_warn("ti invalid!\n");
+	else {
+		pr_info(
+		"thread_info (0x%lx) is "
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+		"within the task struct itself\n"
+#else
+		"separate (not within the task struct)\n"
+#endif
+		, ti);
 	}
 
 	pr_info(
-	"thread_info is "
-#ifdef CONFIG_THREAD_INFO_IN_TASK
-	"within the task struct itself\n"
-#else
-	"separate (not within the task struct)\n"
-#endif
-	"stack : 0x%lx"  /* we use the %lx fmt spec instead of the
+		"stack      : 0x%lx ; vmapped?"  /* we use the %lx fmt spec instead of the
 			     * recommended-for-security %pK as we really do want
 			     * to see the actual address here; don't do this in
 			     * production! */
 #ifdef CONFIG_VMAP_STACK
-	"  (vmapped)\n"
+	" yes\n"
 #else
-	"\n"
+	" no\n"
 #endif
 #ifdef CONFIG_GCC_PLUGIN_STACKLEAK
 	"  (GCC STACKLEAK) lowest stack : 0x%lx\n"
 #endif
 	"flags : 0x%x\n"
-#ifdef CONFIG_THREAD_INFO_IN_TASK
-	" curr CPU : %d\n"
-#endif
 	"sched ::\n"
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+	"  curr CPU    : %3d\n"
+#endif
 	"  on RQ?      : %s\n"
 	"  prio        : %3d\n"
 	"  static prio : %3d\n"
@@ -131,36 +152,98 @@ static int disp_task_details(struct task_struct *p)
 #endif
 	);
 
-	if (p->mm)
-		pr_info("not a kernel thread; mm_struct   : 0x%lx\n", p->mm);
-		// TODO : show mm details here
-	else
+	/* some mm details */
+	if (p->mm) {
+		pr_info("mm info ::\n"
+			" not a kernel thread; mm_struct   : 0x%lx\n", p->mm);
+		pr_info(
+		" PGD base addr : 0x%lx\n"
+		" mm_users = %d, mm_count = %d\n"
+	#ifdef CONFIG_MMU
+		" PTE page table pages = %ld bytes\n"
+	#endif
+		" # of VMAs                                  =  %9d\n"
+		" Highest VMA end address                    = 0x%lx\n"
+		" High-watermark of RSS usage                = %9lu pages\n"
+                " High-water virtual memory usage            = %9lu pages\n"
+                " Total pages mapped                         = %9lu pages\n"
+                " Pages that have PG_mlocked set             = %9lu pages\n"
+                " Refcount permanently increased             = %9lu pages\n"
+                " data_vm: VM_WRITE & ~VM_SHARED & ~VM_STACK = %9lu pages\n"
+                " exec_vm:   VM_EXEC & ~VM_WRITE & ~VM_STACK = %9lu pages\n"
+                " stack_vm:                         VM_STACK = %9lu pages\n"
+                " def_flags                                  = 0x%x\n"
+		,
+			p->mm->pgd,
+			atomic_read(&p->mm->mm_users),
+			atomic_read(&p->mm->mm_count),
+		#ifdef CONFIG_MMU
+			atomic_read(&p->mm->pgtables_bytes),
+		#endif
+			p->mm->map_count,
+			p->mm->highest_vm_end,
+			p->mm->hiwater_rss, /* High-watermark of RSS usage */
+			p->mm->hiwater_vm,  /* High-water virtual memory usage */
+			p->mm->total_vm,    /* Total pages mapped */
+			p->mm->locked_vm,   /* Pages that have PG_mlocked set */
+			p->mm->pinned_vm,   /* Refcount permanently increased */
+			p->mm->data_vm,     /* VM_WRITE & ~VM_SHARED & ~VM_STACK */
+			p->mm->exec_vm,     /* VM_EXEC & ~VM_WRITE & ~VM_STACK */
+			p->mm->stack_vm,    /* VM_STACK */
+			p->mm->def_flags
+		);
+
+		/* userspace mappings */
+		//spin_lock(&p->mm->arg_lock);
+		pr_info(
+			"mm userspace mapings (high to low) ::\n"
+			" env        : 0x%lx - 0x%lx  [%6u bytes]\n"
+			" args       : 0x%lx - 0x%lx  [%6u bytes]\n"
+			" start stack: 0x%lx\n"
+			" heap       : 0x%lx - 0x%lx  [%6u KB]\n"
+			" data       : 0x%lx - 0x%lx  [%6u KB]\n"
+			" code       : 0x%lx - 0x%lx  [%6u KB]\n"
+			,
+			p->mm->env_start, p->mm->env_end,
+			p->mm->env_end - p->mm->env_start,
+			p->mm->arg_start, p->mm->arg_end,
+			p->mm->arg_end - p->mm->arg_start,
+			p->mm->start_stack,
+			p->mm->start_brk, p->mm->brk,
+			(p->mm->brk - p->mm->start_brk)/1024,
+			p->mm->start_data, p->mm->end_data,
+			(p->mm->end_data - p->mm->start_data)/1024,
+			p->mm->start_code, p->mm->end_data,
+			(p->mm->end_data - p->mm->start_code)/1024
+		);
+		//spin_unlock(&p->mm->arg_lock);
+	} else
 		pr_info("is a kernel thread (mm NUL)\n");
 
 	pr_info(
-	" in execve()? %s\n"
-	" in iowait  ? %s\n"
-	" stack canary  : 0x%lx\n"
-	" utime, stime  : %llu, %llu\n"
-	" # vol c/s, # invol c/s : %6lu, %6lu\n"
-	" # minor, major faults  : %6lu, %6lu\n"
+	"in execve()? %s\n"
+	"in iowait  ? %s\n"
+	"stack canary  : 0x%lx\n"
+	"utime, stime  : %llu, %llu\n"
+	"# vol c/s, # invol c/s : %6lu, %6lu\n"
+	"# minor, major faults  : %6lu, %6lu\n"
 #ifdef CONFIG_LOCKDEP
-	" lockdep depth : %d\n"
+	"lockdep depth : %d\n"
 #endif
 #ifdef CONFIG_TASK_IO_ACCOUNTING
-	" task I/O accounting ::\n"
-	"  read bytes               : %7llu\n"
-	"  written (or will) bytes  : %7llu\n"
-	"  cancelled write bytes    : %7llu\n"
+	"task I/O accounting ::\n"
+	" read bytes               : %7llu\n"
+	" written (or will) bytes  : %7llu\n"
+	" cancelled write bytes    : %7llu\n"
 #endif
 #ifdef CONFIG_TASK_XACCT
-	"  # read syscalls          : %7llu\n"
-	"  # write syscalls         : %7llu\n"
+	" # read syscalls          : %7llu\n"
+	" # write syscalls         : %7llu\n"
 	" accumulated RSS usage     : %9llu (%6llu KB)\n"  // bytes ??
 	" accumulated  VM usage     : %9llu (%6llu KB)\n"  // bytes ??
 #endif
 #ifdef CONFIG_PSI
-	" pressure stall state flags: 0x%lx\n"
+	"pressure stall state flags: 0x%lx\n"
 #endif
 	,
 	p->in_execve == 1 ? "yes" : "no",
@@ -191,16 +274,18 @@ static int disp_task_details(struct task_struct *p)
 
 	/* thread struct : cpu-specific hardware context */
 	pr_info(
-	" Hardware ctx info location is thread_info : 0x%lx\n"
+	"Hardware ctx info location is thread_info : 0x%lx\n"
 #ifdef CONFIG_X86_64
-	" X86_64 ::\n"
+	"X86_64 ::\n"
 	"  sp  : 0x%lx\n"
 	"  es  : 0x%x, ds  : 0x%x\n"
 	"  cr2 : 0x%lx, trap #  : 0x%lx, error code  :  0x%lx\n"
 	"  mm: addr limit (user boundary) : 0x%lx (%lu GB, %lu TB)\n" /* %lu EB)\n" */
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
-	" ARM64 ::\n"
+	"ARM64 ::\n"
+	" thrd info: 0x%lx\n"
+	"  addr limit : 0x%lx (%u MB, %u GB)\n"
 	" Saved registers ::\n"
 	"  X19 = 0x%lx  X20 = 0x%lx   X21 = 0x%lx\n"
 	"  X22 = 0x%lx  X23 = 0x%lx   X24 = 0x%lx\n"
@@ -208,7 +293,7 @@ static int disp_task_details(struct task_struct *p)
 	"  X28 = 0x%lx\n"
 	"   FP = 0x%lx   SP = 0x%lx    PC = 0x%lx\n"
 	"  fault_address  : 0x%lx, fault code (ESR_EL1): 0x%lx\n"
-	"\n arm64 pointer authentication"
+	" arm64 pointer authentication"
  #ifdef CONFIG_ARM64_PTR_AUTH
 	" present.\n"
  #else
@@ -226,6 +311,10 @@ static int disp_task_details(struct task_struct *p)
 	/* (unsigned long)p->thread.addr_limit.seg/(1024*1024*1024*1024) : results in IoF ! */
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
+	ti,
+	ti->addr_limit,
+	ti->addr_limit/(1024*1024),
+	ti->addr_limit/(1024*1024*1024),
 	p->thread.cpu_context.x19, p->thread.cpu_context.x20, p->thread.cpu_context.x21,
 	p->thread.cpu_context.x22, p->thread.cpu_context.x23, p->thread.cpu_context.x24,
 	p->thread.cpu_context.x25, p->thread.cpu_context.x26, p->thread.cpu_context.x27,
