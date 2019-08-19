@@ -196,7 +196,7 @@ static int disp_task_details(struct task_struct *p)
 			atomic_read(&p->mm->mm_users),
 			atomic_read(&p->mm->mm_count),
 		#ifdef CONFIG_MMU
-			atomic_read(&p->mm->pgtables_bytes),
+			atomic64_read(&p->mm->pgtables_bytes),
 		#endif
 			p->mm->map_count,
 			p->mm->highest_vm_end,
