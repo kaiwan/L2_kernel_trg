@@ -1,5 +1,5 @@
 # Makefile
-ALL := malloc_brk_test segv_pgfault cache_effect_try
+ALL := malloc_brk_test segv_pgfault vm_user
 CC := ${CROSS_COMPILE}gcc
 
 all: ${ALL}
@@ -9,11 +9,8 @@ hello: hello.c
 	${CC} hello.c -o hello -Wall
 segv_pgfault: segv_pgfault.c
 	${CC} segv_pgfault.c -o segv_pgfault -Wall
-
-cache_effect_try: cache_effect_try.c
-	${CC} cache_effect_try.c -o cache_effect_try -Wall -Os
-dbg_cache_effect_try: cache_effect_try.c
-	${CC} cache_effect_try.c -o dbg_cache_effect_try -Wall -O0 -g -ggdb
+vm_user: vm_user.c
+	${CC} vm_user.c -o vm_user -Wall
 
 clean:
 	rm -f *.o ${ALL}
