@@ -37,8 +37,8 @@ dmesg
  exit 1
 }
 [ ! -w /dev/taskdtl ] && {
- echo "${name}: device node /dev/taskdtl does not exist or not writeable? aborting..."
- exit 1
+ echo "${name}: device node /dev/taskdtl does not exist or not writeable? trying via creator script..."
+ ./cr8devnode.sh || exit 1
 }
 lsmod | grep -q ${KMOD} || {
  echo "${name}: kernel module \"${KMOD}\" not installed? inserting..."
