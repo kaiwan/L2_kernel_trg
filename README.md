@@ -1,5 +1,5 @@
-Source code : for the kaiwanTECH 'Linux Kernel Internals' corporate
-training sessions.
+# L2_kernel_trg
+Source code plus utils : for the kaiwanTECH 'Linux Kernel Internals' corporate training sessions.
 
 -----------------------------------------------------------
 A NOTE to participants of the training course(s) follows:
@@ -44,6 +44,5 @@ And all the very best,
 Kaiwan.
 < kaiwan -at- kaiwantech -dot- com >
 (c) kaiwanTECH
-
 
 COURSES: http://bit.ly/ktcorp
