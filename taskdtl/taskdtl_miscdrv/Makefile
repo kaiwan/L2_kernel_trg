@@ -36,4 +36,3 @@ else
   taskdtlv2-objs := taskdtl_miscdrv.o ../taskdtl_display.o
 
 endif
-#$(MAKE) -C $(KDIR) SUBDIRS=$(PWD) clean

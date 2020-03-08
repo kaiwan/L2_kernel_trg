@@ -25,6 +25,8 @@ MODULE_LICENSE("Dual MIT/GPL");
 #define MODNAME    "taskdtl_miscdrv"
 int disp_task_details(struct task_struct *);
 
+static struct device *dev;
+
 static int my_dev_open(struct inode *inode, struct file *file)
 {
 	pr_info("%s:%s() called.\n"
@@ -113,7 +115,8 @@ static const struct file_operations my_dev_fops = {
 /* declare & initialize struct miscdevice */
 static struct miscdevice my_miscdevice = {
 	.minor = MISC_DYNAMIC_MINOR, /* dynamically allocate an available minor # */
-	.name = "mydev",
+	.name = "taskdtl",			 /* name of the device node */
+	.mode = 0666,
 	.fops = &my_dev_fops,        /* functionality */
 };
 
@@ -130,6 +133,7 @@ static int __init taskdtl_init(void)
 		return ret_val;
 	}
 
+	dev = my_miscdevice.this_device;
 	pr_info("%s:minor=%d\n", MODNAME, my_miscdevice.minor);
 	pr_info("%s: initialized\n", MODNAME);
 	return 0;
