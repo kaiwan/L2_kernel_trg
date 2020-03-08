@@ -27,6 +27,11 @@ int disp_task_details(struct task_struct *p)
 	char *pol=NULL;
 	struct thread_info *ti = task_thread_info(p);
 
+	if (!pid_alive(p)) {
+		pr_info("%s(): task not alive? aborting...\n", __func__);
+		return -EINVAL;
+	}
+
 	task_lock(p);
 	pr_info("\n<--------------- %16s : %7d ------------------>\n",
 		p->comm, p->pid);
