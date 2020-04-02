@@ -101,6 +101,10 @@
 #define QPDS
 #endif
 
+/* SHOW_*() inspired from raspberry pi kernel src: arch/arm/mm/init.c:MLM() */
+#define SHOW_M(low, hi) (low), (hi), (((hi) - (low)) >> 20)
+#define SHOW_G(low, hi) (low), (hi), (((hi) - (low)) >> 30)
+
 #ifdef __KERNEL__
 /*------------------------ PRINT_CTX ---------------------------------*/
 /* 
