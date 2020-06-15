@@ -14,7 +14,7 @@
 
 MODULE_AUTHOR("<insert your name here>");
 MODULE_DESCRIPTION("a hello, world type LKM");
-MODULE_LICENSE("Dual MIT/GPL");
+MODULE_LICENSE("Dual MIT/GPL");	// or whatever
 MODULE_VERSION("0.1");
 
 static int __init lkm_template_init(void)
