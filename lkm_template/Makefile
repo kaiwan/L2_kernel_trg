@@ -1,7 +1,13 @@
 # Makefile
-# For Linux kernel module(s)
-# (c) Kaiwan N Billimoria, kaiwanTECH
-# License: MIT
+# A better Makefile template for Linux LKMs (Loadable Kernel Modules); besides
+# the 'usual' targets (the build, install and clean), we incorporate targets to
+# do useful (and indeed required) stuff like:
+#  - adhering to kernel coding style (indent+checkpatch)
+#  - several static analysis targets (via sparse, gcc, flawfinder, cppcheck)
+#  - two 'dummy' dynamic analysis targets (KASAN, LOCKDEP)
+#  - a packaging (.tar.xz) target and
+#  - a help target.
+# (c) 2020 Kaiwan N Billimoria, kaiwanTECH
 
 # To support cross-compiling for kernel modules:
 # For architecture (cpu) 'arch', invoke make as:
@@ -12,8 +18,12 @@ ifeq ($(ARCH),arm)
 else ifeq ($(ARCH),arm64)
   # *UPDATE* 'KDIR' below to point to the ARM64 (Aarch64) Linux kernel source
   # tree on your box
+  KDIR ?= ~/kernel/linux-4.14
+else ifeq ($(ARCH),powerpc)
+  # *UPDATE* 'KDIR' below to point to the PPC64 Linux kernel source tree on your box
   KDIR ?= ~/kernel/linux-4.9.1
-else    # it's (typically) x86_64
+else
+  # x86[_64]: 'KDIR' is the Linux kernel source tree (headers) on your box
   KDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 
@@ -22,20 +32,20 @@ EXTRA_CFLAGS   += -DDEBUG
 
 all:
 	@echo
-	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} EXTRA_CFLAGS=${EXTRA_CFLAGS} ---'
+	@echo '-- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} EXTRA_CFLAGS=${EXTRA_CFLAGS} --'
 	@echo
 	make -C $(KDIR) M=$(PWD) modules
 install:
 	@echo
-	@echo "--- installing ---"
+	@echo "-- installing --"
 	@echo
 	make -C $(KDIR) M=$(PWD) modules_install
 clean:
 	@echo
-	@echo "--- cleaning ---"
+	@echo "-- cleaning --"
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f *~   # from 'indent'
+	rm -f *~ *.o.ur-safe
 
 #--------------- More (useful) targets! -------------------------------
 INDENT := indent
@@ -50,7 +60,7 @@ code-style:
 # Note! original source file(s) is overwritten, so we back it up.
 indent:
 	@echo
-	@echo "--- applying kernel code style indentation with indent ---"
+	@echo "-- applying kernel code style indentation with indent --"
 	@echo
 	mkdir bkp 2> /dev/null; cp -f *.[chsS] bkp/
 	${INDENT} -linux *.[chsS]
@@ -60,7 +70,7 @@ indent:
 checkpatch:
 	make clean
 	@echo
-	@echo "--- kernel code style check with checkpatch.pl ---"
+	@echo "-- kernel code style check with checkpatch.pl --"
 	@echo
 	$(KDIR)/scripts/checkpatch.pl --no-tree -f *.c
 	  # add source files as required
@@ -77,7 +87,7 @@ sa:
 sa_sparse:
 	make clean
 	@echo
-	@echo "--- static analysis with sparse ---"
+	@echo "-- static analysis with sparse --"
 	@echo
 	make C=2 -C $(KDIR) M=$(PWD) modules
 
@@ -85,7 +95,7 @@ sa_sparse:
 sa_gcc:
 	make clean
 	@echo
-	@echo "--- static analysis with gcc ---"
+	@echo "-- static analysis with gcc --"
 	@echo
 	make W=1 -C $(KDIR) M=$(PWD) modules
 
@@ -93,7 +103,7 @@ sa_gcc:
 sa_flawfinder:
 	make clean
 	@echo
-	@echo "--- static analysis with flawfinder ---"
+	@echo "-- static analysis with flawfinder --"
 	@echo
 	flawfinder *.c
 
@@ -101,21 +111,21 @@ sa_flawfinder:
 sa_cppcheck:
 	make clean
 	@echo
-	@echo "--- static analysis with cppcheck ---"
+	@echo "-- static analysis with cppcheck --"
 	@echo
-	cppcheck -v --force .
+	cppcheck --language=c -q --force .
 
-# Packaging; tar.xz as of now
+# Packaging; just tar.xz as of now
 PKG_NAME := lkm_template
-package:
+tarxz-pkg:
 	rm -f ../${PKG_NAME}.tar.xz 2>/dev/null
 	make clean
 	@echo
-	@echo "--- packaging ---"
+	@echo "-- packaging --"
 	@echo
 	tar caf ../${PKG_NAME}.tar.xz *
 	ls -l ../${PKG_NAME}.tar.xz
-	@echo '=== package created: ../$(PKG_NAME).tar.xz ==='
+	@echo '== package created: ../$(PKG_NAME).tar.xz =='
 
 help:
 	@echo '=== Makefile Help : additional targets available ==='
@@ -123,13 +133,19 @@ help:
 	@echo 'TIP: type make <tab><tab> to show all valid targets'
 	@echo
 
-	@echo '--- kernel code style targets ---'
+	@echo '-- 'usual' kernel LKM targets --'
+	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
+	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (defaults: /lib/modules/$(uname -r)/'
+	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
+
+	@echo
+	@echo '-- kernel code style targets --'
 	@echo 'code-style : "wrapper" target over the following kernel code style targets'
 	@echo ' indent     : run the $(INDENT) utility on source file(s) to indent them as per the kernel code style'
 	@echo ' checkpatch : run the kernel code style checker tool on source file(s)'
 
 	@echo
-	@echo '--- kernel static analyzer targets ---'
+	@echo '-- kernel static analyzer targets --'
 	@echo 'sa         : "wrapper" target over the following kernel static analyzer targets'
 	@echo ' sa_sparse  : run the static analysis sparse tool on the source file(s)'
 	@echo ' sa_gcc     : run gcc with option -W1 ("Generally useful warnings") on the source file(s)'
@@ -137,13 +153,12 @@ help:
 	@echo 'TIP: use coccinelle as well (requires spatch): https://www.kernel.org/doc/html/v4.15/dev-tools/coccinelle.html'
 
 	@echo
-	@echo '--- kernel dynamic analysis targets ---'
+	@echo '-- kernel dynamic analysis targets --'
 	@echo 'da_kasan   : DUMMY target: this is to remind you to run your code with the dynamic analysis KASAN tool enabled; requires configuring the kernel with CONFIG_KASAN On, rebuild and boot it'
 	@echo 'da_lockdep : DUMMY target: this is to remind you to run your code with the dynamic analysis LOCKDEP tool (for deep locking issues analysis) enabled; requires configuring the kernel with CONFIG_PROVE_LOCKING On, rebuild and boot it'
 	@echo 'TIP: best to build a debug kernel with several kernel debug config options turned On, boot via it and run all your test cases'
 
 	@echo
-	@echo '--- misc targets ---'
-	@echo 'clean      : cleanup - remove all the kernel objects, temp files/dirs, etc'
-	@echo 'package    : tar and compress the source files into the dir above'
-	@echo 'help       : this 'help' target'
+	@echo '-- misc targets --'
+	@echo 'tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system'
+	@echo 'help       : this help target'
