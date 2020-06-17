@@ -38,17 +38,24 @@ journalctl -k
   threads currently alive"
  exit 1
 }
+
+lsmod | grep -q ${KMOD} || {
+ echo "${name}: kernel module \"${KMOD}\" not installed? inserting..."
+ if [ ! -s ${KMOD}.ko ] ; then  #-o ${KMOD}.c -nt ${KMOD}.ko ] ; then
+	echo "${name}: building kernel module \"${KMOD}\" now ..."
+	make || {
+	  echo "build failed! aborting..." ; exit 1
+	}
+ fi
+ sudo rmmod ${KMOD} 2>/dev/null
+ sudo dmesg -C
+ sudo insmod ${KMOD}.ko
+}
+
 # The /dev/taskdtl device node is auto-created by the misc driver
 [ ! -w /dev/taskdtl ] && {
  echo "${name}: device node /dev/taskdtl does not exist or not writeable? aborting..."
  exit 1
-}
-
-lsmod | grep -q ${KMOD} || {
- echo "${name}: kernel module \"${KMOD}\" not installed? inserting..."
- sudo rmmod ${KMOD}
- sudo dmesg -C
- sudo insmod ${KMOD}.ko
 }
 
 [ "$1" = "all" ] && {
