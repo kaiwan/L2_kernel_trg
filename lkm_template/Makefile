@@ -8,6 +8,7 @@
 #  - a packaging (.tar.xz) target and
 #  - a help target.
 # (c) 2020 Kaiwan N Billimoria, kaiwanTECH
+# License: MIT
 
 # To support cross-compiling for kernel modules:
 # For architecture (cpu) 'arch', invoke make as:
