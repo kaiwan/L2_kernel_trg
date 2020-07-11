@@ -2,13 +2,14 @@
  * taskdtl_display.c
  * 
  * Brief Description:
+ * A 'library' routine of sorts... invoked from another module/linked into
+ * other kernel module.
  * Given the task structure pointer as a parameter, this function displays
  * (via printk's) some of the task structure details.
  *
  * Author: Kaiwan N Billimoria <kaiwan -at- kaiwantech -dot- com>
- * License: MIT
+ * License: Dual MIT/GPL
  */
-
 #include <linux/sched.h>     /* current */
 #include <linux/vmalloc.h>   /* gcc err "dereferencing pointer to incomplete type" if not included */
 #include <linux/mm_types.h>
@@ -95,6 +96,7 @@ int disp_task_details(struct task_struct *p)
 	}
 
 	pr_info(
+		"# threads  : %7d\n"
 		"stack      : 0x%lx ; vmapped?"  /* we use the %lx fmt spec instead of the
 			     * recommended-for-security %pK as we really do want
 			     * to see the actual address here; don't do this in
@@ -118,6 +120,7 @@ int disp_task_details(struct task_struct *p)
 	"  normal prio : %3d\n"
 	"  RT priority : %3d\n"
 	"  vruntime    : %llu\n",
+	get_nr_threads(p),
 	p->stack,
 #ifdef CONFIG_GCC_PLUGIN_STACKLEAK
 	p->lowest_stack,
