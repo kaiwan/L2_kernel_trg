@@ -46,11 +46,12 @@ endif
 
 PWD          := $(shell pwd)
 
-EXTRA_CFLAGS += -DDEBUG -Wformat=0
-# Note: above, we use -Wformat=0 here to turn Off some printk warnings reg the use
-# of %p instead of %016llx ...; we do so so that we can see the actual virt
-# addr and not a hashed value (kernel security feature); it's
-# ok here, but don't do this in production.
+#EXTRA_CFLAGS += -DDEBUG -Wformat=0
+EXTRA_CFLAGS += -Wformat=0
+# Note: above, we use -Wformat=0 here to turn Off some printk warnings reg the
+# use of %p instead of %016llx ...; we do so so that we can see the actual
+# virtual addr and not a hashed value (kernel security feature); it's ok here,
+# but don't do this in production
  
 # The actual code for the task structure display is in the file ../taskdtl_display.c
 # (akin to a 'library'); link it into this kernel module
