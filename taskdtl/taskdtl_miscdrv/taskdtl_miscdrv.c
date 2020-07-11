@@ -146,33 +146,5 @@ static void __exit taskdtl_exit(void)
 	misc_deregister(&my_miscdevice);
 }
 
-#if 0
-static int __init taskdtl_init(void)
-{
-	struct task_struct *tp;
-	
-	if (0 == pid) {
-		pr_err("%s: pl pass a valid PID as parameter to this kernel module\n", MODNAME);
-		return -EINVAL;
-	}
-	tp = pid_task(find_vpid(pid), PIDTYPE_PID);
-	if (!tp) {
-		pr_err("%s: failed to obtain task struct pointer for PID %d\n",
-			MODNAME, pid);
-		return -EINVAL;
-	}
-	pr_debug("pid=%d, tp = 0x%lx\n", pid, tp);
-	disp_task_details(tp);
-	return 0;
-}
-static void __exit taskdtl_exit(void)
-{
-	pr_info("%s: exiting now\n", MODNAME);
-#if 0
-    dump_stack();
-#endif
-}
-#endif
-
 module_init(taskdtl_init);
 module_exit(taskdtl_exit);
