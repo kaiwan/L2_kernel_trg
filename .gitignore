@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+dbconflict/
+.*.swp
+gplshim*/
+*.cache.mk
+*.tar*
+older*/
+*.o.ur-safe
+*bkp/
