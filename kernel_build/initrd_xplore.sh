@@ -9,13 +9,6 @@
 # kaiwanTECH
 # MIT License.
 name=$(basename $0)
-source ./common.sh || {
- echo "$name: could not source common.sh , aborting..."
- exit 1
-}
-
-########### Functions follow #######################
-
 
 main()
 {
