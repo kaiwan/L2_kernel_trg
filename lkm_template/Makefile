@@ -1,4 +1,11 @@
-# MAkefile
+# ***************************************************************
+# This program is part of the source code released for the
+# 'Linux Kernel Internals' training.
+# (c) Author: Kaiwan N Billimoria
+#  GitHub repository:
+#  https://github.com/kaiwan/L2_kernel_trg
+# ***************************************************************
+# Makefile
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
 # the 'usual' targets (the build, install and clean), we incorporate targets to
@@ -34,8 +41,11 @@ else
   KDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 
+# Set FNAME_C to the kernel module name
+FNAME_C := lkm_template
+
 PWD            := $(shell pwd)
-obj-m          += lkm_template.o
+obj-m          += ${FNAME_C}.o
 EXTRA_CFLAGS   += -DDEBUG
 
 all:
@@ -125,7 +135,7 @@ sa_cppcheck:
 	cppcheck -v --force .
 
 # Packaging; just tar.xz as of now
-PKG_NAME := lkm_template
+PKG_NAME := ${FNAME_C}
 tarxz-pkg:
 	rm -f ../${PKG_NAME}.tar.xz 2>/dev/null
 	make clean
