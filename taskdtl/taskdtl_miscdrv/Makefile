@@ -1,13 +1,10 @@
-# ch5/lkm_template/Makefile
 # ***************************************************************
-# This program is part of the source code released for the book
-#  "Learn Linux Kernel Development"
-#  (c) Author: Kaiwan N Billimoria
-#  Publisher:  Packt
+# This program is part of the source code released for the
+# 'Linux Kernel Internals' training.
+# (c) Author: Kaiwan N Billimoria
 #  GitHub repository:
-#  https://github.com/PacktPublishing/Learn-Linux-Kernel-Development
-#
-# From: Ch 5 : Writing Your First Kernel Module LKMs, Part 2
+#  https://github.com/kaiwan/L2_kernel_trg
+# License: MIT
 # ***************************************************************
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
@@ -21,8 +18,6 @@
 #
 # To get started, just type:
 #  make help
-#
-# For details, please refer the book, Ch 5.
 
 # To support cross-compiling for kernel modules:
 # For architecture (cpu) 'arch', invoke make as:
@@ -44,7 +39,8 @@ else
   KDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 
-PWD          := $(shell pwd)
+# Set FNAME_C to the kernel module name
+FNAME_C := taskdtlv2
 
 #EXTRA_CFLAGS += -DDEBUG -Wformat=0
 EXTRA_CFLAGS += -Wformat=0
@@ -55,8 +51,13 @@ EXTRA_CFLAGS += -Wformat=0
  
 # The actual code for the task structure display is in the file ../taskdtl_display.c
 # (akin to a 'library'); link it into this kernel module
-obj-m          := taskdtlv2.o
+obj-m          := ${FNAME_C}.o
 taskdtlv2-objs := taskdtl_miscdrv.o ../taskdtl_display.o
+
+
+PWD            := $(shell pwd)
+obj-m          += ${FNAME_C}.o
+EXTRA_CFLAGS   += -DDEBUG
 
 all:
 	@echo
@@ -142,10 +143,10 @@ sa_cppcheck:
 	@echo
 	@echo "--- static analysis with cppcheck ---"
 	@echo
-	cppcheck -v --force .
+	cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
 
 # Packaging; just tar.xz as of now
-PKG_NAME := lkm_template
+PKG_NAME := ${FNAME_C}
 tarxz-pkg:
 	rm -f ../${PKG_NAME}.tar.xz 2>/dev/null
 	make clean
@@ -176,9 +177,10 @@ help:
 	@echo
 	@echo '--- kernel static analyzer targets ---'
 	@echo 'sa         : "wrapper" target over the following kernel static analyzer targets'
-	@echo ' sa_sparse  : run the static analysis sparse tool on the source file(s)'
-	@echo ' sa_gcc     : run gcc with option -W1 ("Generally useful warnings") on the source file(s)'
+	@echo ' sa_sparse     : run the static analysis sparse tool on the source file(s)'
+	@echo ' sa_gcc        : run gcc with option -W1 ("Generally useful warnings") on the source file(s)'
 	@echo ' sa_flawfinder : run the static analysis flawfinder tool on the source file(s)'
+	@echo ' sa_cppcheck   : run the static analysis cppcheck tool on the source file(s)'
 	@echo 'TIP: use coccinelle as well (requires spatch): https://www.kernel.org/doc/html/v4.15/dev-tools/coccinelle.html'
 
 	@echo
