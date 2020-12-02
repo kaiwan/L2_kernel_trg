@@ -8,7 +8,7 @@
  Load this module & look up /proc/slabinfo ..
 
  (c) Kaiwan NB
- GPL v2.
+ MIT
  */
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -49,9 +49,7 @@ void mycache_use(void)
 	memset(object, 0xae, sizeof(MyStruct));
 	print_hex_dump_bytes(" ", DUMP_PREFIX_ADDRESS, object, sizeof(MyStruct));
 
-	if (object) {
-		kmem_cache_free (my_cachep, object);
-	}
+	kmem_cache_free(my_cachep, object);
 }
 
 static void init_my_cache(void)
@@ -74,7 +72,6 @@ static void init_my_cache(void)
 
 static int slabsee_init(void)
 {
-	QP;
 	init_my_cache();
 	mycache_use();
 	return 0;
@@ -82,7 +79,6 @@ static int slabsee_init(void)
 
 static void slabsee_exit(void)
 {
-	QP;
 	if (my_cachep)
 		kmem_cache_destroy(my_cachep);
 }
@@ -90,4 +86,4 @@ static void slabsee_exit(void)
 module_init(slabsee_init);
 module_exit(slabsee_exit);
 
-MODULE_LICENSE("GPL");
+MODULE_LICENSE("MIT");
