@@ -4,19 +4,23 @@ Meant for participants in the kaiwanTECH 'Linux Kernel Internals' and/or
 This directory serves as a 'template' for submitting assignments. Please do go 
 through it carefully and follow the conventions and style; particularly, see and
 follow the various Makefile targets. In general, follow all guidelines you have
-been given in the "Grading Methodology" PDF sent earlier to you.
+This source directory serves as a 'template' for Linux LKMs (Loadable Kernel
+Modules). Please do go through the files in it carefully and follow the
+targets.
 
-IMPORTANT ::
+on your code, via code-style checking, static and dynamic analysis tools.
 
-We expect you to have several targets in the Makefile (besides the usual
-suspects); do see the Makefile 'template' here. The output of the 'make 
-help' below shows the targets expected (besides the 'usual' program built
-for non-debug as well as for debug):
+The output of the 'make help' below shows the targets:
 
-$ make help
+$ make help 
 === Makefile Help : additional targets available ===
 
 TIP: type make <tab><tab> to show all valid targets
+
+--- usual kernel LKM targets ---
+typing "make" or "all" target : builds the kernel module object (the .ko)
+install     : installs the kernel module(s) to INSTALL_MOD_PATH (defaults: /lib/modules//
+clean       : cleanup - remove all kernel objects, temp files/dirs, etc
 
 --- kernel code style targets ---
 code-style : "wrapper" target over the following kernel code style targets
@@ -36,40 +40,20 @@ da_lockdep : DUMMY target: this is to remind you to run your code with the dynam
 TIP: best to build a debug kernel with several kernel debug config options turned On, boot via it and run all your test cases
 
 --- misc targets ---
-clean      : cleanup - remove all the kernel objects, temp files/dirs, etc
-package    : tar and compress the source files into the dir above
+tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system
 help       : this help target
 $ 
 
 FYI, the checkpatch.pl Perl script is part of the Linux kernel source; you can
 download it here:
 https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl
+or access it on your local system via
+ ${KDIR}/scripts/checkpatch.pl
+ ; where KDIR is the location of your local kernel source tree (could even
+ point to the kernel headers tree).
 
 ----------------------------------------------------------------------------------
-README : for the 'lkm_template' Linux LKm (Lodable Kernel Module)
-Part of the 'Linux Kernel Internals' training, kaiwanTECH
-June 2020
-
---------------------------------------------------------
-Assignment: <assignment-name>
-
-<Describe the assignment, expected behavior and results here>
---------------------------------------------------------
-
-To build:
-make
-
-Type
-make <tab><tab>
-to see all available targets
-(remember to put a space after typing 'make').
-
-make <target>
-to build <target>.
-----------------------------------------------------------------------------------
-
-
-A few important rules / a quick Checklist for the Programmer
+A few generic important rules / a quick Checklist for the Programmer
 ----------------------------------------------------------------------------------
 DID YOU REMEMBER TO
 ✔ Rule #1 : Check all APIs for their failure case
