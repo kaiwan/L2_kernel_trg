@@ -1,10 +1,4 @@
-# ***************************************************************
-# This program is part of the source code released for the
-# 'Linux Kernel Internals' training.
-# (c) Author: Kaiwan N Billimoria
-#  GitHub repository:
-#  https://github.com/kaiwan/L2_kernel_trg
-# License: MIT
+# Makefile
 # ***************************************************************
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
@@ -18,6 +12,7 @@
 #
 # To get started, just type:
 #  make help
+#
 
 # To support cross-compiling for kernel modules:
 # For architecture (cpu) 'arch', invoke make as:
@@ -39,7 +34,7 @@ else
   KDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 
-# Set FNAME_C to the kernel module name
+# Set FNAME_C to the kernel module name source filename (without .c)
 FNAME_C := hello
 
 PWD            := $(shell pwd)
@@ -54,8 +49,13 @@ all:
 install:
 	@echo
 	@echo "--- installing ---"
+	@echo " [First, invoke the 'make' ]"
+	make
 	@echo
-	make -C $(KDIR) M=$(PWD) modules_install
+	@echo " [Now for the 'sudo make install' ]"
+	sudo make -C $(KDIR) M=$(PWD) modules_install
+	sudo depmod
+	@echo "[Install done, pl find the installed LKM under /lib/modules/<kernel-ver>/extra]"
 clean:
 	@echo
 	@echo "--- cleaning ---"
@@ -143,6 +143,8 @@ tarxz-pkg:
 	tar caf ../${PKG_NAME}.tar.xz *
 	ls -l ../${PKG_NAME}.tar.xz
 	@echo '=== package created: ../$(PKG_NAME).tar.xz ==='
+	@echo 'Tip: when extracting, to extract into a dir of the same name as the tar file,'
+	@echo ' do: tar -xvf ${PKG_NAME}.tar.xz --one-top-level'
 
 help:
 	@echo '=== Makefile Help : additional targets available ==='
@@ -152,7 +154,7 @@ help:
 
 	@echo '--- 'usual' kernel LKM targets ---'
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
-	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default: /lib/modules/$(shell uname -r)/)'
+	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/)'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
 	@echo
@@ -179,4 +181,6 @@ help:
 	@echo
 	@echo '--- misc targets ---'
 	@echo 'tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system'
+	@echo ' Tip: when extracting, to extract into a dir of the same name as the tar file,'
+	@echo '  do: tar -xvf ${PKG_NAME}.tar.xz --one-top-level'
 	@echo 'help       : this help target'
