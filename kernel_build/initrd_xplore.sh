@@ -10,7 +10,10 @@
 # MIT License.
 name=$(basename $0)
 
-main()
+# unpack_initramfs
+# Parameters:
+#  $1 : initramfs source file (.cpio.gz)
+unpack_initramfs()
 {
 TMPDIR=tmp.$$
 DEST=initrd_copy.img
@@ -38,5 +41,5 @@ cpio -i < ../${DEST}
   exit 1
 }
 INITRD_SRC=$1
-main ${INITRD_SRC}
+unpack_initramfs ${INITRD_SRC}
 exit 0
