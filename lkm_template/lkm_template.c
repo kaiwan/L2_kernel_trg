@@ -5,9 +5,12 @@
  * (c) Author:
  ****************************************************************
  * Brief Description:
- *
+ * (A 'Hello, world' type Loadable Kernel Module (LKM) template, as such!)
  */
+#define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
+
 #include <linux/init.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 
 #define OURMODNAME   "lkm_template"
@@ -19,13 +22,13 @@ MODULE_VERSION("0.1");
 
 static int __init lkm_template_init(void)
 {
-	pr_debug("%s: inserted\n", OURMODNAME);
+	pr_info("inserted\n");
 	return 0;		/* success */
 }
 
 static void __exit lkm_template_exit(void)
 {
-	pr_debug("%s: removed\n", OURMODNAME);
+	pr_info("removed\n");
 }
 
 module_init(lkm_template_init);
