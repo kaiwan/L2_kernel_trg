@@ -1,6 +1,5 @@
 /*
  * convenient.h
- * Brief Description:
  * A few convenience macros and routines..
  * Mostly for kernel-space usage, some for user-space as well.
  */
@@ -84,6 +83,7 @@
 
 #ifdef __KERNEL__
 #ifndef USE_FTRACE_BUFFER
+// QPDS = Quick Print + Dump Stack
 #define QPDS do {                                                       \
 	MSG("\n");                                                          \
 	dump_stack();                                                       \
@@ -123,7 +123,7 @@
 /*------------------------ PRINT_CTX ---------------------------------*/
 /*
  * An interesting way to print the context info; we mimic the kernel
- * Ftrace 'latency-format' :
+ * Ftrace 'latency-format', printing the 'usual' 4 columns of kernel state info:
  *                       _-----=> irqs-off          [d]
  *                      / _----=> need-resched      [N]
  *                     | / _---=> hardirq/softirq   [H|h|s] [1]
@@ -134,11 +134,16 @@
  *
  * [1] 'h' = hard irq is running ; 'H' = hard irq occurred inside a softirq]
  *
- * Sample output (via 'normal' printk method; in this comment, we make / * into \* ...)
+ * Sample output (via a debug printk; in this comment, we make / * into \* ...):
  *  CPU)  task_name:PID  | irqs,need-resched,hard/softirq,preempt-depth  \* func_name() *\
  *  001)  rdwr_drv_secret -4857   |  ...0   \* read_miscdrv_rdwr() *\
  *
  * (of course, above, we don't display the 'Duration' and 'Function Calls' fields)
+ *
+ * @@@ NOTE @@@
+ * As we use pr_debug() to print this info, you will typically need to either:
+ *  a) define the symbol DEBUG in the module/kernel (hard-coded)
+ *  b) use the kernel's dynamic debug framework to see the debug prints (soft-coded, better!)
  */
 #include <linux/sched.h>
 #include <linux/interrupt.h>
@@ -163,7 +168,7 @@
 	"%03d) %c%s%c:%d   |  "                                                      \
 	"%c%c%c%u   "                                                                \
 	"/* %s() */\n"                                                               \
-	, smp_processor_id(),                                                        \
+	, raw_smp_processor_id(),                                                    \
 	(!current->mm?'[':' '), current->comm, (!current->mm?']':' '), current->pid, \
 	(irqs_disabled()?'d':'.'),                                                   \
 	(need_resched()?'N':'.'),                                                    \
@@ -173,6 +178,23 @@
 	);                                                                           \
 } while (0)
 #endif
+/*
+ * Interesting:
+ * Above, I had to change the smp_processor_id() to raw_smp_processor_id(); else,
+ * on a DEBUG kernel (configured with many debug config options), the foll warnings
+ * would ensue:
+Oct 04 12:19:53 dbg-LKD kernel: BUG: using smp_processor_id() in preemptible [00000000] code: rdmem/12133
+Oct 04 12:19:53 dbg-LKD kernel: caller is debug_smp_processor_id+0x17/0x20
+Oct 04 12:19:53 dbg-LKD kernel: CPU: 0 PID: 12133 Comm: rdmem Tainted: G      D    O      5.10.60-dbg01 #1
+Oct 04 12:19:53 dbg-LKD kernel: Hardware name: innotek GmbH VirtualBox/VirtualBox, BIOS VirtualBox 12/01/2006
+Oct 04 12:19:53 dbg-LKD kernel: Call Trace:
+Oct 04 12:19:53 dbg-LKD kernel:  dump_stack+0xbd/0xfa
+...
+ * This is caught due to the fact that, on a debug kernel, when the kernel config
+ * CONFIG_DEBUG_PREEMPT is enabled, it catches the possibility that functions
+ * like smp_processor_id() are called in an atomic context where sleeping / preemption
+ * is disallowed! With the 'raw' version it works without issues (just as Ftrace does).
+ */
 
 /*------------------------ assert ---------------------------------------
  * Hey, careful!
@@ -235,7 +257,11 @@ static inline void beep(int what)
 void delay_sec(long);
 /*------------ delay_sec --------------------------------------------------
  * Delays execution for @val seconds.
- * If @val is -1, we sleep forever!
+ * The fact is, it's unnecessary (just a demo): the kernel already has the
+ * ssleep() inline function (a simple wrapper over the msleep()).
+ *
+ * Parameters:
+ * @val : number of seconds to sleep for; if -1, sleep forever
  * MUST be called from process context.
  * (We deliberately do not inline this function; this way, we can see it's
  * entry within a kernel stack call trace).
@@ -245,7 +271,7 @@ void delay_sec(long val)
 	asm ("");    // force the compiler to not inline it!
 	if (in_task()) {
 		set_current_state(TASK_INTERRUPTIBLE);
-		if (-1 == val)
+		if (val == -1)
 			schedule_timeout(MAX_SCHEDULE_TIMEOUT);
 		else
 			schedule_timeout(val * HZ);
@@ -253,4 +279,27 @@ void delay_sec(long val)
 }
 #endif   /* #ifdef __KERNEL__ */
 
-#endif   /* #ifndef __CONVENIENT_H__ */
+#ifdef __KERNEL__
+/*
+ * SHOW_DELTA() macro
+ * Show the difference between the timestamps passed
+ * Parameters:
+ *  @later, @earlier : nanosecond-accurate timestamps
+ * Expect that @later > @earlier
+ */
+#include <linux/jiffies.h>
+#include <linux/ktime.h>
+#define SHOW_DELTA(later, earlier)  do {    \
+    if (time_after((unsigned long)later, (unsigned long)earlier)) { \
+	    s64 delta_ns = ktime_to_ns(ktime_sub(later, earlier));      \
+        pr_info("delta: %lld ns", delta_ns);       \
+		if (delta_ns/1000 >= 1)                    \
+			pr_info(" %lld us", delta_ns/1000);    \
+		if (delta_ns/1000000 >= 1)                 \
+			pr_info(" %lld ms", delta_ns/1000000); \
+    } else  \
+        pr_warn("SHOW_DELTA(): *invalid* earlier > later?\n");  \
+} while (0)
+#endif   /* #ifdef __KERNEL__ */
+
+#endif   /* #ifndef __LKD_CONVENIENT_H__ */
