@@ -52,8 +52,19 @@ static void mycache_use(void)
 
 static void init_my_cache(void)
 {
+#if 0
 	char *snum = "1002";
 	int n;
+
+	// just for flawfinder etc demo :-p
+	n = kstrtoint(snum, 0, &n);
+	pr_info("n = %d, slen=%ld\n", n, strlen(snum));
+	/*
+	slab_custom.c:60:  [1] (buffer) strlen:
+  Does not handle strings that are not \0-terminated; if given one it may
+  perform an over-read (it could cause a crash if unprotected) (CWE-126).
+    */
+#endif
 
 	pr_debug("sizeof(MyStruct) = %lu\n", sizeof(struct MyStruct));
 	/*
@@ -66,9 +77,6 @@ static void init_my_cache(void)
 				      sizeof(struct MyStruct), 0,	/* Alignment */
 				      SLAB_HWCACHE_ALIGN,	/* Flags */
 				      NULL);	/* Constructor */
-	// just for flawfinder etc demo :-p
-	n = kstrtoint(snum, 0, &n);
-	pr_info("n = %d, slen=%ld\n", n, strlen(snum));
 }
 
 static int slabsee_init(void)
