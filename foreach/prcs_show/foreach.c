@@ -26,14 +26,6 @@
 #define MY_MAJOR  	0    /* 0 => dynamic major number assignment */
 #define MAXKBUF_LEN	20*1024 // 20Kb should do.... ?
 
-#ifdef DEBUG
-	#define MSG(string, args...) \
-		printk(KERN_DEBUG "%s:%s:%d: " string, \
-			DRVNAME, __FUNCTION__, __LINE__, ##args)
-#else
-	#define MSG(string, args...)
-#endif
-
 static int taskinfo_major = MY_MAJOR;
 
 static ssize_t taskinfo_read(struct file *filp, char __user *buf, 
@@ -60,11 +52,11 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 		);
 		strncat (kbuf, tmp, num);
 		numread += num;
-		//printk("num=%d numread=%d tmp=%s\n", num, numread, tmp);
+		pr_debug("num=%d numread=%d tmp=%s\n", num, numread, tmp);
 
 #ifndef CONFIG_PREEMPT
 		if (unlikely(test_tsk_thread_flag(current, TIF_NEED_RESCHED))) {
-			MSG ("the unlikely occured. scheduling...\n");
+			pr_debug("the unlikely occured. scheduling...\n");
 			cond_resched();
 		}
 #endif
@@ -86,7 +78,7 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 static ssize_t taskinfo_write(struct file *filp, const char __user *buf, 
 		size_t count, loff_t *offp)
 {
-	MSG("process %s [pid %d], count=%ld\n", 
+	pr_debug("process %s [pid %d], count=%ld\n", 
 			current->comm, current->pid, count);
 	return -ENOSYS;
 }
@@ -101,7 +93,7 @@ static struct file_operations taskinfo_fops = {
 
 static int taskinfo_open(struct inode * inode, struct file * filp)
 {
-	MSG( "Device node with minor # %d being used\n", iminor(inode));
+	pr_debug("Device node with minor # %d being used\n", iminor(inode));
 
 	switch (iminor(inode)) {
 		case 0:
@@ -134,7 +126,7 @@ static int __init taskinfo_init_module(void)
 {
 	int result;
 
-	MSG ("taskinfo_major=%d\n",taskinfo_major);
+	pr_debug("taskinfo_major=%d\n",taskinfo_major);
 
 	/*
 	 * Register the major, and accept a dynamic number.
@@ -142,13 +134,13 @@ static int __init taskinfo_init_module(void)
 	 */
 	result = register_chrdev(taskinfo_major, DRVNAME, &taskinfoopen_fops);
 	if (result < 0) {
-		MSG("register_chrdev() failed trying to get taskinfo_major=%d\n",
-		taskinfo_major);
+		pr_debug("register_chrdev() failed trying to get taskinfo_major=%d\n",
+			taskinfo_major);
 		return result;
 	}
 
 	if (taskinfo_major == 0) taskinfo_major = result; /* dynamic */
-	MSG( "registered:: taskinfo_major=%d\n",taskinfo_major);
+	pr_info( "registered:: taskinfo_major=%d\n",taskinfo_major);
 
 	return 0; /* success */
 }
@@ -156,7 +148,7 @@ static int __init taskinfo_init_module(void)
 static void __exit taskinfo_cleanup_module(void)
 {
 	unregister_chrdev(taskinfo_major, DRVNAME);
-	MSG("Unregistered.\n");
+	pr_info("Unregistered.\n");
 }
 
 module_init(taskinfo_init_module);

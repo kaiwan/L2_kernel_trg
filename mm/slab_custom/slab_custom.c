@@ -54,7 +54,7 @@ void mycache_use(void)
 
 static void init_my_cache(void)
 {
-	MSG("sizeof(MyStruct) = %lu\n", sizeof(MyStruct));
+	pr_debug("sizeof(MyStruct) = %lu\n", sizeof(MyStruct));
 	/*
 	struct kmem_cache *
 	kmem_cache_create( const char *name, size_t size, size_t align,
