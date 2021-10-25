@@ -62,6 +62,10 @@ clean:
 	make -C $(KDIR) M=$(PWD) clean
 	rm -f *~   # from 'indent'
 
+#---usermode app
+rdtasks:
+	gcc rdtasks.c -o rdtasks -Wall -Os
+
 #--------------- More (useful) targets! -------------------------------
 INDENT := indent
 

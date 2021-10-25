@@ -55,6 +55,7 @@ install:
 	@echo " [Now for the 'sudo make install' ]"
 	sudo make -C $(KDIR) M=$(PWD) modules_install
 	sudo depmod
+	@echo "[Install done, find the installed LKM under /lib/modules/<kernel-ver>/extra]"
 clean:
 	@echo
 	@echo "--- cleaning ---"
