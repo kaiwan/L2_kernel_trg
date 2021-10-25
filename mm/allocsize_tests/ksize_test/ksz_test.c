@@ -47,7 +47,7 @@ static int __init kmt_init(void)
 
 	while (1) {
 		p = kmalloc(num, GFP_KERNEL);
-		if (!p) {
+		if (unlikely(!p)) {
 			pr_alert("kmalloc fail, num=%d\n", num);
 			return -ENOMEM;
 		}
