@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 trap 'pkill t1; pkill t2; pkill t3' INT QUIT EXIT
 
 [ $# -ne 1 ] && {
@@ -16,5 +16,5 @@ HDR="
             task   PID         tree-key  switches  prio     exec-runtime         sum-exec        sum-sleep       Task Group
 -------------------------------------------------------------------------------------------------------------------------------------"
 echo "${HDR}"
-[ $1 -eq 0 ] && ./show_rq.sh |grep 't[1-3]' || [ $1 -eq 1 ] && ./show_rq.sh
+[ $1 -eq 0 ] && ./show_rq.sh |grep "t[1-3]" || [ $1 -eq 1 ] && ./show_rq.sh
 
