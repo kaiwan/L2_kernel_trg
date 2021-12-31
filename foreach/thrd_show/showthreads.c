@@ -3,8 +3,8 @@
  *
  * Author: Kaiwan N Billimoria <kaiwan@kaiwantech.com>
  * MIT/GPL.
- *
  */
+//#define pr_fmt(fmt) "%s:%s():%d: " fmt, KBUILD_MODNAME, __func__, __LINE__
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/sched.h>
@@ -28,8 +28,10 @@ static void showthrds(void)
 "----------------------------------------------------------------------------\n"
 	);
 
+	rcu_read_lock();
 	do_each_thread(g, t) {
 		task_lock(t);
+		get_task_struct(t);
 
 		snprintf(buf, 256, "%6d %6d ", g->tgid, t->pid);
 		if (!g->mm) {       // kernel thread
@@ -40,7 +42,7 @@ static void showthrds(void)
 		strncat(buf, tmp, 128);
 
 		nr_thrds = get_nr_threads(g);
-		// "main" thread of multiple
+		// "main" thread of a multithread app?
 		if (g->mm && (g->tgid == t->pid) && (nr_thrds > 1)) {
 			snprintf(tmp, 128, "    %4d", nr_thrds);
 			strncat(buf, tmp, 128);
@@ -52,8 +54,10 @@ static void showthrds(void)
 
 		memset(buf, 0, sizeof(buf));
 		memset(tmp, 0, sizeof(tmp));
+		put_task_struct(t);
 		task_unlock(t);
 	} while_each_thread(g, t);
+	rcu_read_unlock();
 }
 
 static int __init showthrds_init_module(void)
@@ -64,7 +68,7 @@ static int __init showthrds_init_module(void)
 
 static void __exit showthrds_cleanup_module(void)
 {
-	pr_info("%s: unoaded.\n", DRVNAME);
+	pr_info("%s: unoaded.\n", KBUILD_MODNAME);
 }
 
 module_init(showthrds_init_module);
