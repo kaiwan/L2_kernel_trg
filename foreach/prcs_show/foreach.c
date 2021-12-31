@@ -8,6 +8,8 @@
  * Released under the terms of the MIT License.
  *  https://en.wikipedia.org/wiki/MIT_License
  */
+#define pr_fmt(fmt) "%s:%s():%d: " fmt, KBUILD_MODNAME, __func__, __LINE__
+
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
@@ -36,12 +38,15 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 	int numread=0, num=0;
 
 	if (!(kbuf = kzalloc(MAXKBUF_LEN, GFP_KERNEL))) {
-		printk (KERN_WARNING "%s: kmalloc failed", DRVNAME);
+		pr_warn("kmalloc failed");
 		return -ENOMEM;
 	}
 
+	rcu_read_lock();
 	for_each_process(p) {
 		memset (tmp, 0, 128);
+		task_lock(p);
+		get_task_struct(p);
 		num = snprintf (tmp, 128, "\
 %-16s|%7d|%7d|%7u|%7u\n",
 			p->comm, p->tgid, p->pid,
@@ -60,14 +65,17 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 			cond_resched();
 		}
 #endif
+		put_task_struct(p);
+		task_unlock(p);
 	} // for_each_process loop...
+	rcu_read_unlock();
 
 //printk("\n\n%s\n", kbuf);
 
 #if 1
 	if (copy_to_user(buf, kbuf, numread)) {
-		printk (KERN_ALERT "foreach:copy_to_user failed..\n");
-		kfree (kbuf);
+		pr_alert("copy_to_user failed..\n");
+		kfree(kbuf);
 		return -EFAULT;
 	}
 #endif
@@ -78,7 +86,7 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 static ssize_t taskinfo_write(struct file *filp, const char __user *buf, 
 		size_t count, loff_t *offp)
 {
-	pr_debug("process %s [pid %d], count=%ld\n", 
+	pr_debug("write isn't supported. [fyi, process %s [pid %d], count=%ld]\n",
 			current->comm, current->pid, count);
 	return -ENOSYS;
 }
