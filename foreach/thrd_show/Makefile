@@ -17,7 +17,7 @@
 #
 # To get started, just type:
 #  make help
-# License: MIT
+#
 
 # To support cross-compiling for kernel modules:
 # For architecture (cpu) 'arch', invoke make as:
@@ -28,10 +28,10 @@ ifeq ($(ARCH),arm)
 else ifeq ($(ARCH),arm64)
   # *UPDATE* 'KDIR' below to point to the ARM64 (Aarch64) Linux kernel source
   # tree on your box
-  KDIR ?= ~/kernel/linux-4.14
+  KDIR ?= ~/kernel/linux-5.4
 else ifeq ($(ARCH),powerpc)
   # *UPDATE* 'KDIR' below to point to the PPC64 Linux kernel source tree on your box
-  KDIR ?= ~/kernel/linux-4.9.1
+  KDIR ?= ~/kernel/linux-5.0
 else
   # 'KDIR' is the Linux 'kernel headers' package on your host system; this is
   # usually an x86_64, but could be anything, really (f.e. building directly
@@ -39,29 +39,61 @@ else
   KDIR ?= /lib/modules/$(shell uname -r)/build
 endif
 
-# Set FNAME_C to the kernel module name
+# Set FNAME_C to the kernel module name source filename (without .c)
 FNAME_C := showthreads
 
+CC := ${CROSS_COMPILE}gcc
 PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
-EXTRA_CFLAGS   += -DDEBUG
+
+#--- Debug or production mode?
+# Set the MYDEBUG variable accordingly to y/n resp.
+# (Actually, debug info is always going to be generated when you build the
+# module on a debug kernel, where CONFIG_DEBUG_INFO is defined, making this
+# setting of the ccflags-y variable mostly redundant (besides the -DDEBUG).
+# This simply helps us influence the build on a production kernel, forcing
+# generation of debug symbols, if so required. Also, realize that the DEBUG
+# macro is turned on by many CONFIG_*DEBUG* options; hence, we use a different
+# macro var name, MYDEBUG).
+MYDEBUG := n
+ifeq (${MYDEBUG}, y)
+  ccflags-y   += -DDEBUG -g -ggdb -gdwarf-4 -Wall -fno-omit-frame-pointer -Og -fvar-tracking-assignments
+else
+#  INSTALL_MOD_STRIP=1
+#  ccflags-y   += -UDEBUG
+endif
+# We always keep the dynamic debug facility enabled; this allows us to turn
+# dynamically turn on/off debug printk's later... To disable it simply comment
+# out the following line
+ccflags-y   += -DDYNAMIC_DEBUG_MODULE
+
+KMODDIR ?= /lib/modules/$(shell uname -r)
+STRIP := ${CROSS_COMPILE}strip
 
 all:
 	@echo
-	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} EXTRA_CFLAGS=${EXTRA_CFLAGS} ---'
+	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y=${ccflags-y} ---'
 	@echo
+	${CC} --version
 	make -C $(KDIR) M=$(PWD) modules
+	$(shell [ "${MYDEBUG}" != "y" ] && ${STRIP} --strip-debug ./${FNAME_C}.ko)
 install:
 	@echo
 	@echo "--- installing ---"
+	@echo " [First, invoke the 'make' ]"
+	make
 	@echo
-	make -C $(KDIR) M=$(PWD) modules_install
+	@echo " [Now for the 'sudo make install' ]"
+	sudo make -C $(KDIR) M=$(PWD) modules_install
+# TODO/FIXME: stripped ver doesn't make it to the KMODDIR folder ??
+	$(shell [ "${MYDEBUG}" != "y" ] && sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko)
 clean:
 	@echo
 	@echo "--- cleaning ---"
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f *~   # from 'indent'
+# from 'indent'
+	rm -f *~
 
 #--------------- More (useful) targets! -------------------------------
 INDENT := indent
@@ -143,6 +175,8 @@ tarxz-pkg:
 	tar caf ../${PKG_NAME}.tar.xz *
 	ls -l ../${PKG_NAME}.tar.xz
 	@echo '=== package created: ../$(PKG_NAME).tar.xz ==='
+	@echo 'Tip: when extracting, to extract into a dir of the same name as the tar file,'
+	@echo ' do: tar -xvf ${PKG_NAME}.tar.xz --one-top-level'
 
 help:
 	@echo '=== Makefile Help : additional targets available ==='
@@ -152,7 +186,7 @@ help:
 
 	@echo '--- 'usual' kernel LKM targets ---'
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
-	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default: /lib/modules/$(shell uname -r)/)'
+	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/)'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
 	@echo
@@ -179,4 +213,6 @@ help:
 	@echo
 	@echo '--- misc targets ---'
 	@echo 'tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system'
+	@echo ' Tip: when extracting, to extract into a dir of the same name as the tar file,'
+	@echo '  do: tar -xvf ${PKG_NAME}.tar.xz --one-top-level'
 	@echo 'help       : this help target'
