@@ -43,11 +43,11 @@ FNAME_C := foreach
 
 PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
-EXTRA_CFLAGS   += -DDEBUG
+ccflags-y   += -DDEBUG
 
 all:
 	@echo
-	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} EXTRA_CFLAGS=${EXTRA_CFLAGS} ---'
+	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y=${ccflags-y} ---'
 	@echo
 	make -C $(KDIR) M=$(PWD) modules
 install:
@@ -60,7 +60,7 @@ clean:
 	@echo "--- cleaning ---"
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
-	rm -f *~   # from 'indent'
+	rm -f *~ rdtasks   # from 'indent'
 
 #---usermode app
 rdtasks:
