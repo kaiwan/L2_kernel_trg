@@ -39,7 +39,8 @@ FNAME_C := hello
 
 PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
-EXTRA_CFLAGS   += -DDEBUG
+# EXTRA_CFLAGS is now deprecated; use ccflags-y
+ccflags-y   += -DDEBUG
 
 all:
 	@echo
