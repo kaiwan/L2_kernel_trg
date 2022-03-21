@@ -20,6 +20,7 @@ insmod: ERROR: could not insert module ./ksz_test.ko: Cannot allocate memory
  * License: Dual MIT/GPL
  */
 #include <linux/init.h>
+#include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
 
