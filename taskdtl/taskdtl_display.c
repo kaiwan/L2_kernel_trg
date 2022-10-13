@@ -256,7 +256,9 @@ int disp_task_details(struct task_struct *p)
 	pr_info(
 	"in execve()? %s\n"
 	"in iowait  ? %s\n"
+#ifdef CONFIG_STACKPROTECTOR
 	"stack canary  : 0x%lx\n"
+#endif
 	"utime, stime  : %llu, %llu\n"
 	"# vol c/s, # invol c/s : %6lu, %6lu\n"
 	"# minor, major faults  : %6lu, %6lu\n"
@@ -281,7 +283,9 @@ int disp_task_details(struct task_struct *p)
 	,
 	p->in_execve == 1 ? "yes" : "no",
 	p->in_iowait == 1 ? "yes" : "no",
+#ifdef CONFIG_STACKPROTECTOR
 	p->stack_canary,
+#endif
 	p->utime, p->stime,
 	p->nvcsw, p->nivcsw,
 	p->min_flt, p->maj_flt,
@@ -314,7 +318,6 @@ int disp_task_details(struct task_struct *p)
 	"  sp  : 0x%lx\n"
 	"  es  : 0x%x, ds  : 0x%x\n"
 	"  cr2 : 0x%lx, trap #  : 0x%lx, error code  :  0x%lx\n"
-	"  mm: addr limit (user boundary) : 0x%lx (%lu GB, %lu TB)\n" /* %lu EB)\n" */
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
 	"ARM64 ::\n"
@@ -340,10 +343,7 @@ int disp_task_details(struct task_struct *p)
 	ti,
 	p->thread.sp,
 	p->thread.es, p->thread.ds,
-	p->thread.cr2, p->thread.trap_nr, p->thread.error_code,
-	p->thread.addr_limit.seg, (unsigned long)p->thread.addr_limit.seg/(1024*1024),
-	(unsigned long)p->thread.addr_limit.seg/(1024*1024*1024)
-	/* (unsigned long)p->thread.addr_limit.seg/(1024*1024*1024*1024) : results in IoF ! */
+	p->thread.cr2, p->thread.trap_nr, p->thread.error_code
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
 	ti,
