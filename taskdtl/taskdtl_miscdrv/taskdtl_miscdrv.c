@@ -60,14 +60,15 @@ static ssize_t my_dev_write(struct file *file, const char __user *buf,
 		pr_err("%s:%s(): kzalloc (10) failed !\n", MODNAME, __func__);
 		return -ENOMEM;
 	}
-	
+
 	// Read the PID written from userspace
 	if (copy_from_user(kbuf, buf, count)) {
 		pr_err("%s:%s(): copy_from_user failed !\n", MODNAME, __func__);
 		status = -EFAULT;
 		goto out1;
 	}
-	if ((status = kstrtol(kbuf, 0, &pid)) < 0) {
+	status = kstrtol(kbuf, 0, &pid);
+	if (status < 0) {
 		pr_err("%s:%s(): kstrtol failed : was a numeric value passed?\n",
 			MODNAME, __func__);
 		goto out1;
@@ -124,6 +125,7 @@ static struct miscdevice my_miscdevice = {
 static int __init taskdtl_init(void)
 {
 	int ret_val;
+
 	pr_info("%s: taskdtl misc driver init\n", MODNAME);
 
 	/* Register the device with the Kernel */
