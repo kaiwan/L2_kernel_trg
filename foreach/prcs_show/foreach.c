@@ -59,12 +59,10 @@ static ssize_t taskinfo_read(struct file *filp, char __user *buf,
 		numread += num;
 		pr_debug("num=%d numread=%d tmp=%s\n", num, numread, tmp);
 
-#ifndef CONFIG_PREEMPT
-		if (unlikely(test_tsk_thread_flag(current, TIF_NEED_RESCHED))) {
-			pr_debug("the unlikely occured. scheduling...\n");
-			cond_resched();
-		}
-#endif
+		/* latency reduction via explicit rescheduling in places that are safe */
+		if (cond_resched())
+			pr_debug("resched occured now\n");
+
 		put_task_struct(p);
 		task_unlock(p);
 	} // for_each_process loop...
