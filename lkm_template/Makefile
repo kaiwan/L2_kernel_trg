@@ -107,6 +107,8 @@ install:
 	@echo
 	@echo " [Now for the 'sudo make install' ]"
 	sudo make -C $(KDIR) M=$(PWD) modules_install
+	@echo " sudo depmod"
+	sudo depmod
 	@echo " [If !debug, stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
 	$(shell if [ "${MYDEBUG}" != "y" ]; then sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko; fi)
 clean:

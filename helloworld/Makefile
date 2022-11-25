@@ -40,6 +40,10 @@ FNAME_C := hello
 PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
 # EXTRA_CFLAGS is now deprecated; use ccflags-y
+# Also, note that the CFLAGS we attempt to pass here have limited influence.
+# This is as the actual 'debug' cflags are auto-passed; in effect, if you're
+# building against a kernel that has CONFIG_DEBUG_INFO=y (implying it was
+# compiled with -g), so will all modules built against it!
 ccflags-y   += -DDEBUG
 
 all:
