@@ -18,7 +18,7 @@
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
 #include <asm/pgtable.h>
-#include "convenient.h"  // adjust path as required
+#include "../../convenient.h"  // adjust path as required
 
 #if(BITS_PER_LONG == 32)
 	#define FMTSPC		"%08x"
