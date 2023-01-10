@@ -83,7 +83,7 @@ static void findinlist_letter(s8 char2locate)
 		if (curr->letter == char2locate) {
 			found = true;
 			pr_info("found '%c' @ node #%d:\n"
-			"%9d %9d   %c\n",
+			"%9d %9d   _%c_\n",
 			char2locate, i, curr->ival1, curr->ival2, curr->letter);
 		}
 		i++;
