@@ -1,0 +1,127 @@
+/*
+ * list.c
+ ***************************************************************
+ * (c) Author: Kaiwan NB, kaiwanTECH
+ ****************************************************************
+ * Brief Description:
+ * Basic usage of the Linux kernel's famous linked list functionality..
+ * License: Dual MIT/GPL
+ */
+#define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
+
+#include <linux/init.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/slab.h>
+#include <linux/list.h>
+
+MODULE_AUTHOR("kaiwanTECH");
+MODULE_DESCRIPTION("a simple Linux kernel linked list usage demo");
+MODULE_LICENSE("Dual MIT/GPL");	// or whatever
+MODULE_VERSION("0.1");
+
+LIST_HEAD(head_node);
+struct node {
+	struct list_head list; /* first member should be this one; it has ptrs
+				* to next and prev */
+	int ival1, ival2;
+	s8 letter;
+};
+
+static int add2tail(int v1, int v2, s8 achar)
+{
+	struct node *mynode = NULL;
+
+	mynode = kzalloc(sizeof(struct node), GFP_KERNEL);
+	if (!mynode)
+		return -ENOMEM;
+	mynode->ival1 = v1;
+	mynode->ival2 = v2;
+	mynode->letter = achar;
+
+	INIT_LIST_HEAD(&mynode->list);
+	// void list_add_tail(struct list_head *new, struct list_head *head)
+	list_add_tail(&mynode->list, &head_node);
+	pr_info("Added a node (with letter '%c') to the list...\n", achar);
+
+	return 0;
+}
+
+static void showlist(void)
+{
+	//struct list_head *ptr;
+	struct node *curr;
+
+	if (list_empty(&head_node))
+		return;
+
+	pr_info("   val1   |   val2   | letter\n");
+#if 0
+	list_for_each(ptr, &head_node) {
+		curr = list_entry(ptr, struct node, list); // wrapper over container_of()
+#else
+	// simpler: internally invokes __container_of() to get the ptr to curr struct
+	list_for_each_entry(curr, &head_node, list) {
+#endif
+		pr_info("%9d %9d   %c\n",
+			curr->ival1, curr->ival2, curr->letter);
+	}
+}
+
+/* Works, but is O(n) */
+static void findinlist_letter(s8 char2locate)
+{
+	struct node *curr;
+	int i = 0;
+	bool found = false;
+
+	if (list_empty(&head_node))
+		return;
+
+	pr_info("Searching list for letter '%c'...\n", char2locate);
+	list_for_each_entry(curr, &head_node, list) {
+		if (curr->letter == char2locate) {
+			found = true;
+			pr_info("found '%c' @ node #%d:\n"
+			"%9d %9d   %c\n",
+			char2locate, i, curr->ival1, curr->ival2, curr->letter);
+		}
+		i++;
+	}
+	if (!found)
+		pr_info("Didn't find '%c' in list\n", char2locate);
+}
+
+static void freelist(void)
+{
+	struct node *curr;
+
+	if (list_empty(&head_node))
+		return;
+
+	pr_info("freeing list items...\n");
+	list_for_each_entry(curr, &head_node, list)
+		kfree(curr);
+}
+
+static int __init list_init(void)
+{
+	add2tail(1, 2, 'l');
+	add2tail(5, 1000, 'i');
+	add2tail(3, 1415, 's');
+	add2tail(jiffies, jiffies+msecs_to_jiffies(300), 't');
+	showlist();
+	findinlist_letter('s');
+	findinlist_letter('z');
+
+	return 0;		/* success */
+}
+
+static void __exit list_exit(void)
+{
+	freelist();
+	pr_info("removed\n");
+}
+
+module_init(list_init);
+module_exit(list_exit);
