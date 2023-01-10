@@ -6,6 +6,8 @@
  ****************************************************************
  * Brief Description:
  * (A 'Hello, world' type Loadable Kernel Module (LKM) template, as such!)
+ *
+ * License: Dual MIT/GPL
  */
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
