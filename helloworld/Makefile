@@ -1,1 +1,1 @@
-Makefile.better
+Makefile.simple
