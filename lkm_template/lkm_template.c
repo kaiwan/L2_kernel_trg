@@ -13,8 +13,6 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-#define OURMODNAME   "lkm_template"
-
 MODULE_AUTHOR("<insert your name here>");
 MODULE_DESCRIPTION("a hello, world type LKM");
 MODULE_LICENSE("Dual MIT/GPL");	// or whatever
