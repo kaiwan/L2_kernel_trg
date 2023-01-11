@@ -1,0 +1,28 @@
+#!/bin/bash
+# show_compile_flags
+#
+# Notes: from my LKD book:
+# ...
+# Further, and very useful, you can leverage readelf(1) to determine the
+# DWARF format debug information embedded within the binary Executable
+# and Linker Format (ELF) file. This can be particularly useful to figure out
+# exactly which compiler flags your binary executable or kernel module has been
+# built with. You can do so like this:
+# readelf --debug-dump <module_dbg.ko> | grep producer
+# 
+# Note that this technique typically works only when debug info is enabled;
+# further, when working with a different target architecture (for example, ARM),
+# you'll need to run that toolchain's version: ${CROSS_COMPILE}readelf.
+name=$(basename $0)
+set -euo pipefail
+
+[ $# -ne 1 ] && {
+	echo "Usage: ${name} ELF-file (executable or module)"
+	exit 1
+}
+echo -n "Current kernel has CONFIG_DEBUG_INFO=y ? "
+ans=$(grep -w CONFIG_DEBUG_INFO /boot/config-$(uname -r) |cut -d'=' -f2)
+[ "${ans}" = "y" ] && echo "yes" || echo "no"
+echo
+readelf --debug-dump $1 | grep producer
+
