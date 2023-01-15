@@ -1,10 +1,20 @@
 /*
  * convenient.h
+ ***********************************************************************
+ * This program is part of the source code released for the book
+ *  "Linux Kernel Debugging"
+ *  (c) Author: Kaiwan N Billimoria
+ *  Publisher:  Packt
+ *  GitHub repository:
+ *  https://github.com/PacktPublishing/Linux-Kernel-Debugging
+ *
+ ************************************************************************
+ * Brief Description:
  * A few convenience macros and routines..
  * Mostly for kernel-space usage, some for user-space as well.
  */
-#ifndef __CONVENIENT_H__
-#define __CONVENIENT_H__
+#ifndef __LKD_CONVENIENT_H__
+#define __LKD_CONVENIENT_H__
 
 #include <asm/param.h>		/* HZ */
 #include <linux/sched.h>
@@ -83,7 +93,6 @@
 
 #ifdef __KERNEL__
 #ifndef USE_FTRACE_BUFFER
-// QPDS = Quick Print + Dump Stack
 #define QPDS do {                                                       \
 	MSG("\n");                                                          \
 	dump_stack();                                                       \
@@ -294,11 +303,13 @@ void delay_sec(long val)
 	    s64 delta_ns = ktime_to_ns(ktime_sub(later, earlier));      \
         pr_info("delta: %lld ns", delta_ns);       \
 		if (delta_ns/1000 >= 1)                    \
-			pr_info(" %lld us", delta_ns/1000);    \
+			pr_cont(" (~ %lld us", delta_ns/1000);   \
 		if (delta_ns/1000000 >= 1)                 \
-			pr_info(" %lld ms", delta_ns/1000000); \
+			pr_cont(" ~ %lld ms", delta_ns/1000000); \
+		if (delta_ns/1000 >= 1)                    \
+			pr_cont(")\n");                         \
     } else  \
-        pr_warn("SHOW_DELTA(): *invalid* earlier > later?\n");  \
+        pr_warn("SHOW_DELTA(): *invalid* earlier > later? (check order of params)\n");  \
 } while (0)
 #endif   /* #ifdef __KERNEL__ */
 
