@@ -12,7 +12,6 @@
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
 #include <linux/init.h>
-#include <linux/kernel.h>
 #include <linux/module.h>
 
 MODULE_AUTHOR("<insert your name here>");
@@ -23,6 +22,13 @@ MODULE_VERSION("0.1");
 static int __init lkm_template_init(void)
 {
 	pr_info("inserted\n");
+#ifdef DEBUG
+	pr_info("DEBUG defined\n");
+	pr_debug("this pr_debug() will work!\n");
+#else
+	pr_info("DEBUG undefined\n");
+	pr_debug("this pr_debug() won't work!\n");
+#endif
 	return 0;		/* success */
 }
 
