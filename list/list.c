@@ -5,6 +5,7 @@
  ****************************************************************
  * Brief Description:
  * Basic usage of the Linux kernel's famous linked list functionality..
+ * Ref: https://www.kernel.org/doc/html/latest/core-api/kernel-api.html#list-management-functions
  * License: Dual MIT/GPL
  */
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
@@ -106,6 +107,8 @@ static void freelist(void)
 
 static int __init list_init(void)
 {
+	struct module mymod;
+
 	add2tail(1, 2, 'l');
 	add2tail(5, 1000, 'i');
 	add2tail(3, 1415, 's');
@@ -114,7 +117,13 @@ static int __init list_init(void)
 	findinlist_letter('s');
 	findinlist_letter('z');
 
-	return 0;		/* success */
+	/* Iterate over all modules?
+	   Fails as struct module is not available to module authors!
+	list_for_each_entry(module.list, THIS_MODULE, list)
+		pr_info("module: %s\n", mymod->name);
+	 */
+
+	return 0;	/* success */
 }
 
 static void __exit list_exit(void)
