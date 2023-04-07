@@ -23,6 +23,7 @@ insmod: ERROR: could not insert module ./ksz_test.ko: Cannot allocate memory
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/slab.h>
+#include <linux/sched.h>
 
 MODULE_LICENSE("Dual MIT/GPL");
 MODULE_AUTHOR("Kaiwan NB, kaiwanTECH");
@@ -44,6 +45,7 @@ static int __init kmt_init(void)
 	int num = 100, actual_alloc = 0;
 	void *p;
 
+	pr_info("context: %s:%d\n", current->comm, current->pid);
 	pr_info("%s", hdr);
 
 	while (1) {
@@ -64,6 +66,7 @@ static int __init kmt_init(void)
 
 static void __exit kmt_exit(void)
 {
+	pr_info("context: %s:%d\n", current->comm, current->pid);
 	pr_info("Goodbye\n");
 }
 
