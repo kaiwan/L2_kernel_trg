@@ -110,6 +110,9 @@ install:
 	sudo depmod
 	@echo " [If !debug, stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
 	$(shell if [ "${MYDEBUG}" != "y" ]; then sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko; fi)
+nsdeps:
+	@echo "--- nsdeps (namespace dependencies resolution; for possibly importing ns's) ---"
+	make -C $(KDIR) M=$(PWD) nsdeps
 clean:
 	@echo
 	@echo "--- cleaning ---"
@@ -226,6 +229,7 @@ help:
 	@echo '--- 'usual' kernel LKM targets ---'
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
 	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/)'
+	@echo 'nsdeps      : namespace dependencies resolution; for possibly importing namespaces'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
 	@echo
