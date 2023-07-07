@@ -58,7 +58,8 @@ static void book_reclaim_callback(struct rcu_head *rcu) {
 	 * To check whether this callback is atomic context or not.
 	 * preempt_count here is more than 0. Because it is irq context.
 	*/
-	pr_info("callback free : %lx, preempt_count : %d\n", (unsigned long)b, preempt_count());
+	pr_info("callback free : %lx, preempt_count : 0x%x\n",
+		(unsigned long)b, preempt_count());
 	kfree(b);
 }
 
@@ -136,7 +137,7 @@ static int borrow_book(int id, int async) {
 		kfree(old_b);
 	}
 
-	pr_info("borrow success %d, preempt_count : %d\n", id, preempt_count());
+	pr_info("borrow success %d, preempt_count : 0x%x\n", id, preempt_count());
 	return 0;
 }
 
@@ -214,7 +215,7 @@ static int return_book(int id, int async) {
 		kfree(old_b);
 	}
 
-	pr_info("return success %d, preempt_count : %d\n", id, preempt_count());
+	pr_info("return success %d, preempt_count : 0x%x\n", id, preempt_count());
 	return 0;
 }
 
