@@ -36,7 +36,7 @@ ALL :=  prod prod_2part
 # Of course, if you have >1 C program to build, you must add  it manually,
 # or better, keep one Makefile per program in separate directories.
 ###
-ALL_NM :=  counting_5.1
+ALL_NM :=  counting_5.1 counting_5.1_dbg counting_5.1_dbg_asan counting_5.1_dbg_ub
 
 CC=${CROSS_COMPILE}gcc
 CL=${CROSS_COMPILE}clang
