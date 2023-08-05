@@ -3,9 +3,9 @@
 # cpucg_test.sh                                                        
 # (c) Kaiwan NB, kaiwanTECH                                            
 #                                                                      
-CGMNT=cgroupfs                                                         
-OUT1=1stjob.txt                                                        
-OUT2=2ndjob.txt                                                        
+CGMNT=cgroup #cgroupfs
+OUT1=1stjob.txt
+OUT2=2ndjob.txt
                                                                        
 cpu_resctrl_try()                                                      
 {                                                                      
