@@ -43,7 +43,7 @@ int disp_task_details(struct task_struct *p)
 		"%26sRealUID    : %6d, EffUID : %6d\n"
 		"%26slogin UID  : %6d\n",
 		p, p->comm, p->tgid, p->pid,
-		" ", __kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
+		" ", task_uid(p), task_euid(p), //__kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
 		" ", __kuid_val(p->loginuid));
 
 #if 0
@@ -251,7 +251,7 @@ int disp_task_details(struct task_struct *p)
 #endif /* CONFIG_ARM64 */
 	
 	} else
-		pr_info("is a kernel thread (mm NUL)\n");
+		pr_info("is a kernel thread (mm NULL)\n");
 
 	pr_info(
 	"in execve()? %s\n"
