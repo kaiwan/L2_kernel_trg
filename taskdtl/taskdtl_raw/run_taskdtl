@@ -7,4 +7,4 @@ KMOD=taskdtl
 sudo rmmod ${KMOD}
 sudo dmesg -C
 sudo insmod ${KMOD}.ko pid=$1
-dmesg
+sudo dmesg
