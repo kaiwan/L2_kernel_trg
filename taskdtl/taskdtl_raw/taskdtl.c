@@ -36,6 +36,11 @@ static int disp_task_details(struct task_struct *p)
 {
 	char *pol=NULL;
 	struct thread_info *ti = task_thread_info(p);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+	unsigned int state;
+#else
+	long state;
+#endif
 
 	task_lock(p);
 
@@ -57,8 +62,13 @@ static int disp_task_details(struct task_struct *p)
 #endif
 
 	/* Task state */
-	pr_info("Task state (%d) : ", p->state);
-	switch (p->state) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 14, 0)
+	state = p->__state;
+#else
+	state = p->state;
+#endif
+	pr_info("Task state (%d) : ", state);
+	switch (state) {
 	case TASK_RUNNING : pr_info(" R: ready-to-run (on rq) OR running (on cpu)\n");
 			    break;
 	case TASK_INTERRUPTIBLE : pr_info(" S: interruptible sleep\n");
@@ -126,9 +136,12 @@ static int disp_task_details(struct task_struct *p)
 	p->lowest_stack,
 #endif
 	p->flags,
+
 #ifdef CONFIG_THREAD_INFO_IN_TASK
-	p->cpu,
+//	p->cpu,
+	raw_smp_processor_id(),
 #endif
+
 	p->on_rq ? "yes" : "no",
 	p->prio,
 	p->static_prio,
@@ -314,12 +327,16 @@ static int disp_task_details(struct task_struct *p)
 	"  sp  : 0x%lx\n"
 	"  es  : 0x%x, ds  : 0x%x\n"
 	"  cr2 : 0x%lx, trap #  : 0x%lx, error code  :  0x%lx\n"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
 	"  mm: addr limit (user boundary) : 0x%lx (%lu GB, %lu TB)\n" /* %lu EB)\n" */
+#endif
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
 	"ARM64 ::\n"
 	" thrd info: 0x%lx\n"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
 	"  addr limit : 0x%lx (%u MB, %u GB)\n"
+#endif
 	" Saved registers ::\n"
 	"  X19 = 0x%lx  X20 = 0x%lx   X21 = 0x%lx\n"
 	"  X22 = 0x%lx  X23 = 0x%lx   X24 = 0x%lx\n"
@@ -335,21 +352,28 @@ static int disp_task_details(struct task_struct *p)
  #endif
 #endif /* CONFIG_ARM64 */
 	,
-	&(p->thread),
+	&(p->thread)
 #ifdef CONFIG_X86_64
+	,
 	ti,
 	p->thread.sp,
 	p->thread.es, p->thread.ds,
-	p->thread.cr2, p->thread.trap_nr, p->thread.error_code,
+	p->thread.cr2, p->thread.trap_nr, p->thread.error_code
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
+	,
 	p->thread.addr_limit.seg, (unsigned long)p->thread.addr_limit.seg/(1024*1024),
-	(unsigned long)p->thread.addr_limit.seg/(1024*1024*1024)
+	(unsigned long)p->thread.addr_limit.seg/(1024*1024*1024),
 	/* (unsigned long)p->thread.addr_limit.seg/(1024*1024*1024*1024) : results in IoF ! */
+#endif
 #endif /* CONFIG_X86_64 */
 #ifdef CONFIG_ARM64
-	ti,
+	ti
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 10, 0)
+	,
 	ti->addr_limit,
 	ti->addr_limit/(1024*1024),
 	ti->addr_limit/(1024*1024*1024),
+#endif
 	p->thread.cpu_context.x19, p->thread.cpu_context.x20, p->thread.cpu_context.x21,
 	p->thread.cpu_context.x22, p->thread.cpu_context.x23, p->thread.cpu_context.x24,
 	p->thread.cpu_context.x25, p->thread.cpu_context.x26, p->thread.cpu_context.x27,
