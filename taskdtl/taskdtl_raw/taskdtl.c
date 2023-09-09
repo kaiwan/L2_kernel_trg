@@ -194,7 +194,9 @@ static int disp_task_details(struct task_struct *p)
 		" PTE page table pages = %ld bytes\n"
 	#endif
 		" # of VMAs                                  =  %9d\n"
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 		" Highest VMA end address                    = 0x%lx\n"
+#endif
 		" High-watermark of RSS usage                = %9lu pages\n"
                 " High-water virtual memory usage            = %9lu pages\n"
                 " Total pages mapped                         = %9lu pages\n"
@@ -212,7 +214,9 @@ static int disp_task_details(struct task_struct *p)
 			atomic64_read(&p->mm->pgtables_bytes),
 		#endif
 			p->mm->map_count,
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 1, 0)
 			p->mm->highest_vm_end,
+#endif
 			p->mm->hiwater_rss, /* High-watermark of RSS usage */
 			p->mm->hiwater_vm,  /* High-water virtual memory usage */
 			p->mm->total_vm,    /* Total pages mapped */
