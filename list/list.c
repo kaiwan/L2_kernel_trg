@@ -119,8 +119,8 @@ static int __init list_init(void)
 
 	/* Iterate over all modules?
 	   Fails as struct module is not available to module authors!
-	list_for_each_entry(module.list, THIS_MODULE, list)
-		pr_info("module: %s\n", mymod->name);
+		list_for_each_entry(module.list, THIS_MODULE, list)
+			pr_info("module: %s\n", mymod->name);
 	 */
 
 	return 0;	/* success */

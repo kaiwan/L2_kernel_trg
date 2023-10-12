@@ -13,9 +13,9 @@
 # To get started, just type:
 #  make help
 #
-# For details on this so-called 'better' Makefile, please refer my earlier book
-# 'Linux Kernel Programming', Packt, Mar 2021, Ch 5 section 'A "better" Makefile
-# template for your kernel modules'.
+# For details on this so-called 'better' Makefile, please refer my book
+# 'Linux Kernel Programming' 2nd Ed, Packt, 2023, Chapter 5, section
+# 'A "better" Makefile template for your kernel modules'.
 
 #------------------------------------------------------------------
 # Set FNAME_C to the kernel module name source filename (without .c)
@@ -55,7 +55,7 @@ endif
 
 # Compiler
 CC     := $(CROSS_COMPILE)gcc
-#CC := clang
+#CC    := clang
 
 PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
