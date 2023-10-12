@@ -145,7 +145,7 @@
  *
  * Sample output (via a debug printk; in this comment, we make / * into \* ...):
  *  CPU)  task_name:PID  | irqs,need-resched,hard/softirq,preempt-depth  \* func_name() *\
- *  001)  rdwr_drv_secret -4857   |  ...0   \* read_miscdrv_rdwr() *\
+ *  001)  rdwr_drv_secret-4857   |  ...0   \* read_miscdrv_rdwr() *\
  *
  * (of course, above, we don't display the 'Duration' and 'Function Calls' fields)
  *

@@ -10,7 +10,7 @@
 #include <linux/sched.h>
 
 #include <linux/version.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,11,0) 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 #include <linux/sched/signal.h>
 #endif
 
@@ -18,26 +18,26 @@
 
 static void showthrds(void)
 {
-	struct task_struct *g, *t; // 'g' : process ptr; 't': thread ptr !
-	int nr_thrds=1;
+	struct task_struct *g, *t;	// 'g' : process ptr; 't': thread ptr !
 	char buf[256], tmp[128];
 
-	pr_info(
-"----------------------------------------------------------------------------\n"
-"    TGID   PID               Thread Name        # Threads\n"
-"----------------------------------------------------------------------------\n"
-	);
+	pr_info
+	    ("----------------------------------------------------------------------------\n"
+	     "    TGID   PID               Thread Name        # Threads\n"
+	     "----------------------------------------------------------------------------\n");
 
 	rcu_read_lock();
 	do_each_thread(g, t) {
+		int nr_thrds = 1;
+
 		task_lock(t);
 		get_task_struct(t);
 
 		snprintf(buf, 256, "%6d %6d ", g->tgid, t->pid);
-		if (!g->mm) {       // kernel thread
-			 snprintf(tmp, 128, "[%30s]", t->comm);
+		if (!g->mm) {	// kernel thread
+			snprintf(tmp, 128, "[%30s]", t->comm);
 		} else {
-			 snprintf(tmp, 128, " %30s ", t->comm);
+			snprintf(tmp, 128, " %30s ", t->comm);
 		}
 		strncat(buf, tmp, 128);
 

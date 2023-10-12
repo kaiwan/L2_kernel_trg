@@ -85,6 +85,7 @@ install:
 	@echo
 	@echo " [Now for the 'sudo make install' ]"
 	sudo make -C $(KDIR) M=$(PWD) modules_install
+	sudo depmod
 # TODO/FIXME: stripped ver doesn't make it to the KMODDIR folder ??
 	$(shell [ "${MYDEBUG}" != "y" ] && sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko)
 clean:
