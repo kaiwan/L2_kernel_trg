@@ -10,9 +10,8 @@ all: module
 
 module:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
-# Assuming ‘install’ is called with root access
 install:
-	$(MAKE) -C $(KDIR) M=$(PWD) modules_install
-	depmod
+	sudo $(MAKE) -C $(KDIR) M=$(PWD) modules_install
+	sudo depmod
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
