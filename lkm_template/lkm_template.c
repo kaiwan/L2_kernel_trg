@@ -1,34 +1,35 @@
 /*
- * lkm_template/lkm_template.c
+ * ch5/lkm_template/lkm_template.c
  ***************************************************************
- * < Your desc, comments, etc >
- * (c) Author:
+ * This program is part of the source code released for the book
+ *  "Linux Kernel Programming" 2E
+ *  (c) Author: Kaiwan N Billimoria
+ *  Publisher:  Packt
+ *  GitHub repository:
+ *  https://github.com/PacktPublishing/Linux-Kernel-Programming_2E
+ *
+ * From: Ch 5 : Writing Your First Kernel Module LKMs, Part 2
  ****************************************************************
  * Brief Description:
- * (A 'Hello, world' type Loadable Kernel Module (LKM) template, as such!)
+ * A very simple 'template' of sorts for a Loadable Kernel Module(s) (LKM).
+ * Do take the time and trouble to study it via the book's Ch 5; don't ignore
+ * it's 'better' Makefile !
  *
- * License: Dual MIT/GPL
+ * For details, please refer the book, Ch 5.
  */
 #define pr_fmt(fmt) "%s:%s(): " fmt, KBUILD_MODNAME, __func__
 
 #include <linux/init.h>
 #include <linux/module.h>
 
-MODULE_AUTHOR("<insert your name here>");
-MODULE_DESCRIPTION("a hello, world type LKM");
+MODULE_AUTHOR("Kaiwan N Billimoria");
+MODULE_DESCRIPTION("a simple LKM template; do refer to the (better) Makefile as well");
 MODULE_LICENSE("Dual MIT/GPL");	// or whatever
-MODULE_VERSION("0.1");
+MODULE_VERSION("0.2");
 
 static int __init lkm_template_init(void)
 {
 	pr_info("inserted\n");
-#ifdef DEBUG
-	pr_info("DEBUG defined\n");
-	pr_debug("this pr_debug() will work!\n");
-#else
-	pr_info("DEBUG undefined\n");
-	pr_debug("this pr_debug() won't work!\n");
-#endif
 	return 0;		/* success */
 }
 
