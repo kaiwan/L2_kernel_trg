@@ -36,8 +36,8 @@
 # As well, the MYDEBUG variable (see it below) can be set to 'y' or 'n' (no being
 # the default)
 FNAME_C := lkm_template
-ifeq (,$(FNAME_C))
-	$(error ERROR: you Must set the FNAME_C variable in the Makefile)
+ifeq ($(FNAME_C),)
+ $(error ERROR: you Must set the FNAME_C variable in the Makefile)
 endif
 #------------------------------------------------------------------
 
@@ -141,7 +141,7 @@ install:
 	@echo " [Now for the 'sudo make install' ]"
 	sudo make -C $(KDIR) M=$(PWD) modules_install
 	sudo depmod
-	@echo " [If !debug, stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
+	@echo " [If !debug and !(module signing), stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
 	if [ "${DBG_STRIP}" = "y" ]; then \
            sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko ; \
 	fi
