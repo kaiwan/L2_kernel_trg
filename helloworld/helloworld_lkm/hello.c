@@ -1,11 +1,11 @@
 #include <linux/init.h>
 #include <linux/module.h>
-#include <linux/kernel.h>
 
 MODULE_LICENSE("Dual MIT/GPL");
 
 static int __init hello_init(void)
 {
+	// printk(KERN_ALERT "Hello, LKM world\n");
 	pr_alert("Hello, LKM world\n");
 
 #if 0
