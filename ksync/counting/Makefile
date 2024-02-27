@@ -26,7 +26,7 @@
 
 ## Pl check and keep or remove <foo>_dbg_[asan|ub|msan] targets
 ## (where <foo> is the program name) as desired.
-ALL :=  prod prod_2part
+ALL :=  counting_singlethrd_5.1 counting_mt_5.1
 
 ###
 # Update as required
@@ -36,7 +36,7 @@ ALL :=  prod prod_2part
 # Of course, if you have >1 C program to build, you must add  it manually,
 # or better, keep one Makefile per program in separate directories.
 ###
-ALL_NM :=  counting_5.1 counting_5.1_dbg counting_5.1_dbg_asan counting_5.1_dbg_ub
+ALL_NM :=  counting_singlethrd_5.1 counting_singlethrd_5.1_dbg counting_mt_5.1 counting_mt_5.1_dbg
 
 CC=${CROSS_COMPILE}gcc
 CL=${CROSS_COMPILE}clang
@@ -72,35 +72,18 @@ CHECKPATCH := ../../checkpatch.pl
 #     excellent for production as it gives ability to debug as and when required!
 #     (internally invokes the 'debug' target as it requires the debug binary as well
 # 3. 'debug' target(s): -O0, debug symbolic info (-g -ggdb), not stripped
-prod: counting_5.1.c
+counting_singlethrd_5.1: counting_singlethrd_5.1.c
 	@echo
-	@echo "--- building 'production'-ready target (-O2, no debug, stripped) ---"
+	@echo "--- building 'production'-ready target counting_singlethrd_5.1 (-O2, no debug, stripped) ---"
 	@echo
-	${CC} ${CFLAGS} counting_5.1.c -o counting_5.1 -pthread
-	${STRIP} --strip-all ./counting_5.1
-
-# The '2-part executable' solution : use strip and objcopy to generate a
-# binary executable that has the ability to retrieve debug symbolic information
-# from the 'debug' binary!
-prod_2part: counting_5.1.c
+	${CC} ${CFLAGS} counting_singlethrd_5.1.c -o counting_singlethrd_5.1 -pthread
+	${STRIP} --strip-debug ./counting_singlethrd_5.1
+counting_mt_5.1: counting_mt_5.1.c
 	@echo
-	@echo "--- building 'production'-ready 2-part target (-O2, no debug, strip-debug) ---"
+	@echo "--- building 'production'-ready target counting_mt_5.1 (-O2, no debug, stripped) ---"
 	@echo
-# We reuire the 'debug' build for the 2part, so do that first
-	make debug
-	${CC} ${CFLAGS} counting_5.1.c -o counting_5.1 -pthread
-	${STRIP} --strip-debug ./counting_5.1
-	objcopy --add-gnu-debuglink=./counting_5.1_dbg ./counting_5.1
-
-debug: counting_5.1.c
-	@echo
-	@echo "--- building 'debug'-ready targets (with debug symbolic info, not stripped) ---"
-	@echo
-	${CC} ${CFLAGS_DBG} counting_5.1.c -o counting_5.1_dbg -pthread
-#-- Sanitizers (use clang or gcc)
-	${CC} ${CFLAGS_DBG_ASAN} counting_5.1.c -o counting_5.1_dbg_asan -pthread
-	${CC} ${CFLAGS_DBG_UB} counting_5.1.c -o counting_5.1_dbg_ub -pthread
-#	${CC} ${CFLAGS_DBG_MSAN} cr8ManyThrds.c -o cr8ManyThrds_dbg_msan -pthread
+	${CC} ${CFLAGS} counting_mt_5.1.c -o counting_mt_5.1 -pthread
+	${STRIP} --strip-debug ./counting_mt_5.1
 
 
 #--------------- More (useful) targets! -------------------------------
