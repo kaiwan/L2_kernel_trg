@@ -29,7 +29,7 @@ int force_page_fault = 0;
  */
 static void see_maps(void)
 {
-#if 1
+#if 0
 	int s;
 	char cmd[128];
 
@@ -87,10 +87,11 @@ int main(int argc, char **argv)
 			p[8000] |= 'a';
 		}
 
+/*
 		if (!(i % stepval)) {	// every 'stepval' iterations..
 			see_maps();
 			//usleep(250000);       // 250ms; to have time for sampling free mem..
-		}
+		} */
 		i++;
 	} while (p && (i < atoi(argv[1])));
 
