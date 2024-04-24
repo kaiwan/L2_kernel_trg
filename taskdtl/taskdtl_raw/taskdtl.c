@@ -47,9 +47,11 @@ static int disp_task_details(struct task_struct *p)
 	/* Task PID, ownership */
 	pr_info("Task struct @ 0x%lx ::\n"
 		"Process/Thread: %16s, TGID %6d, PID %6d\n"
+		"# threads: %6d\n"
 		"%26sRealUID    : %6d, EffUID : %6d\n"
 		"%26slogin UID  : %6d\n",
 		p, p->comm, p->tgid, p->pid,
+		get_nr_threads(p),
 		" ", __kuid_val(p->cred->uid), __kuid_val(p->cred->euid),
 		" ", __kuid_val(p->loginuid));
 
