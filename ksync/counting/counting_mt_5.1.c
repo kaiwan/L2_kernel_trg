@@ -27,20 +27,29 @@ unsigned long long counter = 0;
 
 static __inline__ void inc_count(void)
 {
+#if 1
+	/*
+	 * To make this work, we need to recognize the critical section here and protect it;
+	 * here, we deliberately do nothing; the results speak for themselves - it's definitely wrong!
+	 */
 	counter++;
-	//WRITE_ONCE(counter, READ_ONCE(counter) + 1);
+#else
+	/* Below: won't work here; need to do this in kernel-space of course */
+	WRITE_ONCE(counter, READ_ONCE(counter) + 1);
+#endif
 }
 
 static __inline__ unsigned long long read_count(void)
 {
 	return counter;
+	/* Below: won't work here; need to do this in kernel-space of course */
 	//return READ_ONCE(counter);
 }
 
 void *countup(void *threadnum)
 {
-	sleep(2);  // IMP! ...to simulate / generate concurrency...
-	//printf(".");
+	sleep(1);  // IMP! ...to simulate / generate concurrency...
+
 	inc_count();
 	pthread_exit(NULL);
 }
