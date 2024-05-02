@@ -2,6 +2,10 @@
  * counting_5.1.c
  * Src: Is Parallel Programming Hard, And, If So, What Can You Do About It? Paul McKenny
  *
+ * (What does this v simple program intend to do?
+ * Just this: spawn off many threads (the parameter you pass), and simply have EACH thread
+ * increment a GLOBAL variable. that's it.)
+ *
  * As explained in the book, this completely trivialized way of counting has a major pitfall:
  * counts are lost!
  * Eg.
