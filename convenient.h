@@ -157,7 +157,7 @@
 #include <linux/sched.h>
 #include <linux/interrupt.h>
 
-#define PRINT_CTX() do {                                                      \
+#define PRINT_CTX(t) do {                                                      \
 	int PRINTCTX_SHOWHDR = 0;                                                 \
 	char intr = '.';                                                          \
 	if (!in_task()) {                                                         \
@@ -178,7 +178,7 @@
 	"%c%c%c%u   "                                                                \
 	"/* %s() */\n"                                                               \
 	, raw_smp_processor_id(),                                                    \
-	(!current->mm?'[':' '), current->comm, (!current->mm?']':' '), current->pid, \
+	(!t->mm?'[':' '), t->comm, (!t->mm?']':' '), t->pid, \
 	(irqs_disabled()?'d':'.'),                                                   \
 	(need_resched()?'N':'.'),                                                    \
 	intr,                                                                        \
