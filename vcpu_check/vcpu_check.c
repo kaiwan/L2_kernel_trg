@@ -23,6 +23,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/timer.h>
+#include <linux/sched/signal.h>
 #include "../convenient.h"
 
 #define INITIAL_VALUE	120
@@ -36,7 +37,7 @@ static struct st_ctx {
 	struct timer_list tmr;
 	int data;
 } ctx;
-static unsigned long exp_ms = 100;
+static unsigned long exp_ms = 500;
 
 /*
  * ding() - our timer's callback function!
@@ -48,16 +49,23 @@ static void ding(struct timer_list *timer)
 	 * container_of() macro! This allows us to retrieve access to our
 	 * 'parent' driver context structure
 	 */
+	struct task_struct *p, *t;
+
 	// Whoops! Bugfix- decrement even if DEBUG is off...
-	priv->data--;
+	//priv->data--;
 	//pr_debug("timed out... data=%d\n", priv->data);
-	PRINT_CTX();
-	if (current->flags & PF_VCPU)
-		pr_info("*** PF_VCPU set ***\n");
+
+	for_each_process_thread(p, t) {
+		//PRINT_CTX(t);
+		if (t->flags & PF_VCPU) {
+			PRINT_CTX(t);
+			pr_info("*** PF_VCPU set ***\n");
+		}
+	}
 
 	/* until countdown done, fire it again! */
-	if (priv->data)
-		mod_timer(&priv->tmr, jiffies + msecs_to_jiffies(exp_ms));
+	//if (priv->data)
+	mod_timer(&priv->tmr, jiffies + msecs_to_jiffies(exp_ms));
 }
 
 static int __init timer_simple_init(void)
