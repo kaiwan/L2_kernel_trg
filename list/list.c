@@ -23,8 +23,9 @@ MODULE_VERSION("0.1");
 
 LIST_HEAD(head_node);
 struct node {
-	struct list_head list; /* first member should be this one; it has ptrs
-				* to next and prev */
+	struct list_head list; /* first member should be this one; it has
+				* the pointers to next and prev
+				*/
 	int ival1, ival2;
 	s8 letter;
 };
@@ -107,21 +108,30 @@ static void freelist(void)
 
 static int __init list_init(void)
 {
+#if 0
 	struct module mymod;
+#endif
 
+	/* Add a few nodes to the tail of the list */
 	add2tail(1, 2, 'l');
 	add2tail(5, 1000, 'i');
 	add2tail(3, 1415, 's');
 	add2tail(jiffies, jiffies+msecs_to_jiffies(300), 't');
+
+	// display the list items
 	showlist();
+
+	// search for some items in the list
 	findinlist_letter('s');
 	findinlist_letter('z');
 
 	/* Iterate over all modules?
-	   Fails as struct module is not available to module authors!
+	 * Fails as struct module is not available (!exported) to module authors!
+	 */
+#if 0
 		list_for_each_entry(module.list, THIS_MODULE, list)
 			pr_info("module: %s\n", mymod->name);
-	 */
+#endif
 
 	return 0;	/* success */
 }
