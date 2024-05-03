@@ -292,6 +292,13 @@ void delay_sec(long val)
 /*
  * SHOW_DELTA() macro
  * Show the difference between the timestamps passed
+ * (Typical usage:
+ *	u64 t1, t2;
+ *	t1 = ktime_get_real_ns();
+ *	 [... run stuff ...]
+ *	t1 = ktime_get_real_ns();
+ *	SHOW_DELTA(t2, t1);
+ * )
  * Parameters:
  *  @later, @earlier : nanosecond-accurate timestamps
  * Expect that @later > @earlier

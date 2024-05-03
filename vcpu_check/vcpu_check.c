@@ -37,7 +37,7 @@ static struct st_ctx {
 	struct timer_list tmr;
 	int data;
 } ctx;
-static unsigned long exp_ms = 500;
+static unsigned long exp_ms = 10;
 
 /*
  * ding() - our timer's callback function!
@@ -50,11 +50,13 @@ static void ding(struct timer_list *timer)
 	 * 'parent' driver context structure
 	 */
 	struct task_struct *p, *t;
+	//u64 t1, t2;
 
 	// Whoops! Bugfix- decrement even if DEBUG is off...
 	//priv->data--;
 	//pr_debug("timed out... data=%d\n", priv->data);
 
+	//t1 = ktime_get_real_ns();
 	for_each_process_thread(p, t) {
 		//PRINT_CTX(t);
 		if (t->flags & PF_VCPU) {
@@ -62,6 +64,8 @@ static void ding(struct timer_list *timer)
 			pr_info("*** PF_VCPU set ***\n");
 		}
 	}
+	//t2 = ktime_get_real_ns();
+	//SHOW_DELTA(t2, t1);
 
 	/* until countdown done, fire it again! */
 	//if (priv->data)
