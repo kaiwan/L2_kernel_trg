@@ -157,7 +157,7 @@
 #include <linux/sched.h>
 #include <linux/interrupt.h>
 
-#define PRINT_CTX() do {                                                      \
+#define PRINT_CTX(t) do {                                                      \
 	int PRINTCTX_SHOWHDR = 0;                                                 \
 	char intr = '.';                                                          \
 	if (!in_task()) {                                                         \
@@ -178,7 +178,7 @@
 	"%c%c%c%u   "                                                                \
 	"/* %s() */\n"                                                               \
 	, raw_smp_processor_id(),                                                    \
-	(!current->mm?'[':' '), current->comm, (!current->mm?']':' '), current->pid, \
+	(!t->mm?'[':' '), t->comm, (!t->mm?']':' '), t->pid, \
 	(irqs_disabled()?'d':'.'),                                                   \
 	(need_resched()?'N':'.'),                                                    \
 	intr,                                                                        \
@@ -292,6 +292,13 @@ void delay_sec(long val)
 /*
  * SHOW_DELTA() macro
  * Show the difference between the timestamps passed
+ * (Typical usage:
+ *	u64 t1, t2;
+ *	t1 = ktime_get_real_ns();
+ *	 [... run stuff ...]
+ *	t1 = ktime_get_real_ns();
+ *	SHOW_DELTA(t2, t1);
+ * )
  * Parameters:
  *  @later, @earlier : nanosecond-accurate timestamps
  * Expect that @later > @earlier

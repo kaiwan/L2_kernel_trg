@@ -1,5 +1,10 @@
 /*
  * Src: Is Parallel Programming Hard, And, If So, What Can You Do About It? Paul McKenny
+ *
+ * (What does this v simple program intend to do?
+ * Just this: have ONE thread - main() simply increment a GLOBAL variable a number of times
+ * That's it.)
+ *
  * The single-threaded version - this one - works fine!
  * Not so, the multithreaded one: see and try counting_5.1.c
  */
