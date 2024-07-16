@@ -82,14 +82,13 @@ obj-m          += ${FNAME_C}.o
 
 #--- Debug or production mode?
 # Set the MYDEBUG variable accordingly to y/n resp. We keep it off (n) by default.
-# (Actually, debug info is always going to be generated when you build the
-# module on a debug kernel, where CONFIG_DEBUG_INFO is defined, making this
-# setting of the ccflags-y (or the older EXTRA_CFLAGS) variable mostly redundant
-# (besides the still useful -DDEBUG).
-# This simply helps us influence the build on a production kernel, forcing
-# generation of debug symbols, if so required. Also, realize that the DEBUG
-# macro is turned on by many CONFIG_*DEBUG* options; hence, we use a different
-# macro var name, MYDEBUG).
+# NOTE:
+# It's important to understand that, actually, debug info is *always* going to
+# be generated when you build a module on a debug kernel, a kernel where
+# CONFIG_DEBUG_INFO=y . This makes the setting of the ccflags-y (or the older
+# EXTRA_CFLAGS) variable mostly redundant (besides the still useful -DDEBUG).
+# Also, realize that the macro named 'DEBUG' is turned on by many CONFIG_*DEBUG*
+# options; hence, we use a different macro name, viz, MYDEBUG.
 MYDEBUG := n
 DBG_STRIP := y
 ifeq (${MYDEBUG}, y)
