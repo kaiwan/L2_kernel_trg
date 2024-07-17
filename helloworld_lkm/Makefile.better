@@ -20,7 +20,7 @@
 #------------------------------------------------------------------
 # Set FNAME_C to the kernel module name source filename (without .c)
 # This enables you to use this Makefile as a template; just update this variable!
-# As well, the MYDEBUG variable (see it below) can be set to 'y' or 'n' (no being
+# As well, the DEBUG_MODE variable (see it below) can be set to 'y' or 'n' (no being
 # the default)
 FNAME_C := hello
 ifeq ($(FNAME_C),)
@@ -62,24 +62,24 @@ PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
 
 #--- Debug or production mode?
-# Set the MYDEBUG variable accordingly to y/n resp.
+# Set the DEBUG_MODE variable accordingly to y/n resp.
 # NOTE:
 # It's important to understand that, actually, debug info is *always* going to
 # be generated when you build a module on a debug kernel, a kernel where
 # CONFIG_DEBUG_INFO=y . This makes the setting of the ccflags-y (or the older
 # EXTRA_CFLAGS) variable mostly redundant (besides the still useful -DDEBUG).
 # Also, realize that the macro named 'DEBUG' is turned on by many CONFIG_*DEBUG*
-# options; hence, we use a different macro name, viz, MYDEBUG.
-MYDEBUG := n
+# options; hence, we use a different macro name, viz, DEBUG_MODE.
+DEBUG_MODE := y
 DBG_STRIP := y
 
-ifeq (${MYDEBUG}, y)
+ifeq (${DEBUG_MODE}, y)
  $(info 'DEBUG' build)
 else
  $(info 'Production' build)
 endif
 
-ifeq (${MYDEBUG}, y)
+ifeq (${DEBUG_MODE}, y)
 # https://www.kernel.org/doc/html/latest/kbuild/makefiles.html#compilation-flags
 # EXTRA_CFLAGS deprecated; use ccflags-y
 # As such, we're told that we can't use anything but -O2 for kernel code;
@@ -134,22 +134,22 @@ all:
 	@echo
 	make V=$(VERBOSE) -C $(KDIR) M=$(PWD) modules
 ifeq (${DBG_STRIP}, y)
+	$(info Stripping module (as it's a debug build -AND- CONFIG_MODULE_SIG* is Off)])
 	${STRIP} ./${FNAME_C}.ko
 else
-	$(info NOT stripping module (as it's either a production build OR CONFIG_MODULE_SIG* is On)])
+	$(info NOT stripping module (as it's either a debug build -OR- CONFIG_MODULE_SIG* is On)])
 endif
 install:
 	@echo
 	@echo "--- installing ---"
 	@echo " [First, invoking the 'make' ]"
+	# Build - call 'make' (it also takes care of stripping the module when required)
 	make V=$(VERBOSE)
 	@echo
 	@echo " [Now for the 'sudo make install' ]"
 	sudo make V=$(VERBOSE) -C $(KDIR) M=$(PWD) modules_install
 	@echo " sudo depmod"
 	sudo depmod
-	@echo " [If !debug, stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
-	$(shell if [ "${MYDEBUG}" != "y" ]; then sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko; fi)
 clean:
 	@echo
 	@echo "--- cleaning ---"
