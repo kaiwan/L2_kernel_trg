@@ -136,7 +136,7 @@ all:
 ifeq (${DBG_STRIP}, y)
 	${STRIP} ./${FNAME_C}.ko
 else
-	$(info NOT stripping module (as it's either a produciton build OR CONFIG_MODULE_SIG* is On)])
+	$(info NOT stripping module (as it's either a production build OR CONFIG_MODULE_SIG* is On)])
 endif
 install:
 	@echo
