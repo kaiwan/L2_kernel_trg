@@ -261,6 +261,8 @@ help:
 	@echo '=== Makefile Help : additional targets available ==='
 	@echo
 	@echo 'TIP: type make <tab><tab> to show all valid targets'
+	@echo '(this can result in your being asked for your password as theres'
+	@echo 'a sudo <cmd> embedded within)'
 	@echo
 
 	@echo '--- 'usual' kernel LKM targets ---'
