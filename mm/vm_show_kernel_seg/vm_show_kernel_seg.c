@@ -36,6 +36,9 @@
 
 static unsigned int statgul;
 
+void foo(void);
+void bar(void);
+
 void bar(void)
 {
 	pr_info("---------------------Stack Dump:-------------------------------\n");
@@ -130,7 +133,7 @@ static int __init vm_img_init(void)
 		return -ENOMEM;
 	}
 	/*
-	 * !IMP! NOTE reg the 'new' security-conscious printk formats!
+	 * !IMP! NOTE reg the security-conscious printk formats!
 	 * SHORT story:
 	 * We need to avoid 'leaking' kernel addr to userspace (hackers
 	 * have a merry time!). 
@@ -162,7 +165,7 @@ static int __init vm_img_init(void)
 	pr_info("vmalloc'ed memory dump (%d bytes @ %pK):\n", disp, vptr);
 	print_hex_dump_bytes("vptr: ", DUMP_PREFIX_ADDRESS, vptr, disp);
 
-	pr_info (
+	pr_info(
     "\nSome Kernel Details [sorted by decreasing address] -------------------\n"
 #ifdef CONFIG_X86
 	" FIXADDR_START       = 0x" FMTSPC "\n"
@@ -201,7 +204,7 @@ static int __init vm_img_init(void)
 	 */
 
 	pr_info("\n");
-	PRINT_CTX();       // see the convenient.h header
+	PRINT_CTX(current);       // see the convenient.h header
 	pr_info (
     "\nSome Process Details [sorted by decreasing address] ------------------\n"
 	" [TASK_SIZE         = 0x" FMTSPC " size of userland]\n"
@@ -233,7 +236,7 @@ static int __init vm_img_init(void)
 		(TYPECST)current->mm->start_code,
 		current->mm->map_count);
 
-	pr_info (
+	pr_info(
 	"\nSome sample kernel virtual addreses ---------------------\n" 
 	"&statgul = 0x" FMTSPC ", &jiffies_64 = 0x%08lx, &vg = 0x" FMTSPC "\n"
 	"kptr = 0x" FMTSPC " vptr = 0x" FMTSPC "\n",
