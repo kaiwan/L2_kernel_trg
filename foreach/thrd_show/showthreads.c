@@ -7,12 +7,12 @@
 //#define pr_fmt(fmt) "%s:%s():%d: " fmt, KBUILD_MODNAME, __func__, __LINE__
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <linux/sched.h>
 
 #include <linux/version.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 11, 0)
 #include <linux/sched/signal.h>
 #endif
+#include <linux/sched.h>
 
 #define	DRVNAME		"showthreads"
 
@@ -27,7 +27,15 @@ static void showthrds(void)
 	     "----------------------------------------------------------------------------\n");
 
 	rcu_read_lock();
-	do_each_thread(g, t) {
+//	do_each_thread(g, t) {
+	/* the do_each_thread() { ... } while_each_thread() seems to throw a warning-treated-as-error:
+howthreads.c:30:9: error: implicit declaration of function ‘do_each_thread’; did you mean ‘for_each_thread’? [-Werror=implicit-function-declaration]
+   30 |         do_each_thread(g, t) {
+      |         ^~~~~~~~~~~~~~
+	 * ... 
+	 * So lets just use the simpler form: for_each_process_thread()
+	 */
+	for_each_process_thread(g, t) {
 		int nr_thrds = 1;
 
 		task_lock(t);
@@ -56,7 +64,8 @@ static void showthrds(void)
 		memset(tmp, 0, sizeof(tmp));
 		put_task_struct(t);
 		task_unlock(t);
-	} while_each_thread(g, t);
+	}
+	//while_each_thread(g, t);
 	rcu_read_unlock();
 }
 
