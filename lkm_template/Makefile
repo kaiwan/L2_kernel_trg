@@ -1,13 +1,11 @@
 # ch5/lkm_template/Makefile
 # ***************************************************************
-# This program is part of the source code released for the book
+# This program is from the source code released for the book
 #  "Linux Kernel Programming" 2E
 #  (c) Author: Kaiwan N Billimoria
 #  Publisher:  Packt
 #  GitHub repository:
 #  https://github.com/PacktPublishing/Linux-Kernel-Programming_2E
-#
-# From: Ch 5 : Writing Your First Kernel Module LKMs, Part 2
 # ***************************************************************
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
@@ -101,7 +99,7 @@ ifeq (${MYDEBUG}, y)
   ccflags-y   += -DDEBUG -g -ggdb -gdwarf-4 -Wall -fno-omit-frame-pointer -fvar-tracking-assignments
   DBG_STRIP := n
 else
-  ccflags-y   += -UDEBUG
+  ccflags-y   += -UDEBUG -Wall
 endif
 # We always keep the dynamic debug facility enabled; this allows us to dynamically
 # turn on/off debug printk's later... To disable it simply comment out the following line
