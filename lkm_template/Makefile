@@ -150,7 +150,7 @@ ifeq (,$(shell which dtc))
 	$(error ERROR: install the DTC compiler first)
 endif
 	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC) ---"
-	dtc -@ -I dts -O dtb -o $(FNAME).dtbo $(FNAME).dts
+	dtc -@ -I dts -O dtb -o $(FNAME_C).dtbo $(FNAME_C).dts
 nsdeps:
 	@echo "--- nsdeps (namespace dependencies resolution; for possibly importing ns's) ---"
 	make -C $(KDIR) M=$(PWD) nsdeps
@@ -160,7 +160,7 @@ clean:
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
 # from 'indent'; comment out if you want the backup kept
-	rm -f *~
+	rm -f *~ *.dtbo
 
 # Any usermode programs to build? Insert the build target(s) below
 
