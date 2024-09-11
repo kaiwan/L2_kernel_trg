@@ -301,4 +301,10 @@ help:
 	@echo 'tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system'
 	@echo '        TIP: When extracting, to extract into a directory with the same name as the tar file, do this:'
 	@echo '              tar -xvf ${FNAME_C}.tar.xz --one-top-level'
+	@echo '--- Tips ---'
+	@echo '  If the build fails with a (GCC compiler failure) message like'
+	@echo '   unrecognized command-line option ‘-ftrivial-auto-var-init=zero’'
+	@echo '  it's likely that you're using an older GCC. Try installing gcc-12, change'
+	@echo '  this Makefile s CC variable to "gcc-12" and retry'
+	@echo
 	@echo 'help       : this help target'
