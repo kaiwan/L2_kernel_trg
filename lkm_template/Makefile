@@ -149,7 +149,7 @@ dt:
 ifeq (,$(shell which dtc))
 	$(error ERROR: install the DTC compiler first)
 endif
-	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC) ---"
+	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC/etc) ---"
 	dtc -@ -I dts -O dtb -o $(FNAME_C).dtbo $(FNAME_C).dts
 nsdeps:
 	@echo "--- nsdeps (namespace dependencies resolution; for possibly importing ns's) ---"
@@ -271,7 +271,7 @@ help:
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
 	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/).'
 	@echo '            : Takes care of performing debug-only symbols stripping iff MYDEBUG=n and not using module signature'
-	@echo 'dt          : compiles the Device Tree Blob (DTB) from the DTS file (applicable to ARM and PPC)'
+	@echo 'dt          : compiles the Device Tree Blob (DTB) from the DTS file (applicable to ARM, PPC, RISC-V, etc)'
 	@echo 'nsdeps      : namespace dependencies resolution; for possibly importing namespaces'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
@@ -304,7 +304,7 @@ help:
 	@echo '--- Tips ---'
 	@echo '  If the build fails with a (GCC compiler failure) message like'
 	@echo '   unrecognized command-line option ‘-ftrivial-auto-var-init=zero’'
-	@echo '  it's likely that you're using an older GCC. Try installing gcc-12, change'
-	@echo '  this Makefile s CC variable to "gcc-12" and retry'
+	@echo '  it's likely that you're using an older GCC. Try installing gcc-12 (or later),'
+	@echo '  change this Makefile CC variable to "gcc-12" (or whatever) and retry'
 	@echo
 	@echo 'help       : this help target'
