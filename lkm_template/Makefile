@@ -145,6 +145,12 @@ install:
 	if [ "${DBG_STRIP}" = "y" ]; then \
            sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko ; \
 	fi
+dt:
+ifeq (,$(shell which dtc))
+	$(error ERROR: install the DTC compiler first)
+endif
+	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC) ---"
+	dtc -@ -I dts -O dtb -o $(FNAME).dtbo $(FNAME).dts
 nsdeps:
 	@echo "--- nsdeps (namespace dependencies resolution; for possibly importing ns's) ---"
 	make -C $(KDIR) M=$(PWD) nsdeps
@@ -265,6 +271,7 @@ help:
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
 	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/).'
 	@echo '            : Takes care of performing debug-only symbols stripping iff MYDEBUG=n and not using module signature'
+	@echo 'dt          : compiles the Device Tree Blob (DTB) from the DTS file (applicable to ARM and PPC)'
 	@echo 'nsdeps      : namespace dependencies resolution; for possibly importing namespaces'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
