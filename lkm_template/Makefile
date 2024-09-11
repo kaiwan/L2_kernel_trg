@@ -1,13 +1,11 @@
 # ch5/lkm_template/Makefile
 # ***************************************************************
-# This program is part of the source code released for the book
+# This program is from the source code released for the book
 #  "Linux Kernel Programming" 2E
 #  (c) Author: Kaiwan N Billimoria
 #  Publisher:  Packt
 #  GitHub repository:
 #  https://github.com/PacktPublishing/Linux-Kernel-Programming_2E
-#
-# From: Ch 5 : Writing Your First Kernel Module LKMs, Part 2
 # ***************************************************************
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
@@ -35,9 +33,12 @@
 # This enables you to use this Makefile as a template; just update this variable!
 # As well, the MYDEBUG variable (see it below) can be set to 'y' or 'n' (no being
 # the default)
-FNAME_C := lkm_template
+FNAME_C ?= lkm_template
 ifeq ($(FNAME_C),)
- $(error ERROR: you Must set the FNAME_C variable in the Makefile)
+  $(error ERROR: you Must pass the C file like this: \
+  make FNAME_C=csrc-filename-without-.c target-name)
+else ifneq ("$(origin FNAME_C)", "command line")
+  $(info FNAME_C=$(FNAME_C))
 endif
 #------------------------------------------------------------------
 
@@ -58,9 +59,9 @@ ifeq ($(ARCH),arm)
   # *UPDATE* 'KDIR' below to point to the ARM Linux kernel source tree on your box
   KDIR ?= ~/arm_prj/kernel/linux
 else ifeq ($(ARCH),arm64)
-  # *UPDATE* 'KDIR' below to point to the ARM64 (Aarch64) Linux kernel source
+  # *UPDATE* 'KDIR' below to point to the ARM64 (AArch64) Linux kernel source
   # tree on your box
-  KDIR ?= ~/arm64_prj/kernel/linux-5.10.60
+  KDIR ?= ~/arm64_prj/kernel/linux
 else ifeq ($(ARCH),powerpc)
   # *UPDATE* 'KDIR' below to point to the PPC64 Linux kernel source tree on your box
   KDIR ?= ~/ppc_prj/kernel/linux-5.4
@@ -98,11 +99,10 @@ ifeq (${MYDEBUG}, y)
   ccflags-y   += -DDEBUG -g -ggdb -gdwarf-4 -Wall -fno-omit-frame-pointer -fvar-tracking-assignments
   DBG_STRIP := n
 else
-  ccflags-y   += -UDEBUG
+  ccflags-y   += -UDEBUG -Wall
 endif
-# We always keep the dynamic debug facility enabled; this allows us to turn
-# dynamically turn on/off debug printk's later... To disable it simply comment
-# out the following line
+# We always keep the dynamic debug facility enabled; this allows us to dynamically
+# turn on/off debug printk's later... To disable it simply comment out the following line
 ccflags-y   += -DDYNAMIC_DEBUG_MODULE
 KMODDIR ?= /lib/modules/$(shell uname -r)
 

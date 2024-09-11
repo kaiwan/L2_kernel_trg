@@ -57,9 +57,9 @@ DID YOU REMEMBER TO
 ✔ Rule #4 : Use assertions in your code
 ✔ Rule #5 : Eliminate unused (or dead) code from the codebase immediately
 ✔ Rule #6 : Test thoroughly; ideally, 100% code coverage is the objective.
-   Take the time and trouble to learn to use powerful tools: memory checkers
-   (KASAN, kernel memory leak detector, KCSAN, UBSAN, etc), static and
-   dynamic analyzers, security checkers (checksec), fuzzers, etc
+   Take the time and trouble to learn to use these powerful kernel-space tools:
+   memory checkers (KASAN, kernel memory leak detector, KCSAN, UBSAN, etc),
+   static and dynamic analyzers, security checkers (checksec), fuzzers, etc
 ✔ Rule #7 : Do NOT Assume Anything
    (“ASSUME : makes an ASS out of U and ME” :-) )
 

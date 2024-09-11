@@ -63,6 +63,9 @@ static void ding(struct timer_list *timer)
 			PRINT_CTX(t);
 			pr_info("*** PF_VCPU set ***\n");
 		}
+		/* else
+			pr_info("%s:%d: PF_VCPU unset\n", t->comm, t->pid);
+		 */
 	}
 	//t2 = ktime_get_real_ns();
 	//SHOW_DELTA(t2, t1);

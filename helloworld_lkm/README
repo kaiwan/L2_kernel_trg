@@ -12,6 +12,8 @@ $ make help
 === Makefile Help : additional targets available ===
 
 TIP: Type make <tab><tab> to show all valid targets
+(this might result in your being asked for your password as there's
+a sudo <cmd> embedded within)
 
 --- usual kernel LKM targets ---
 typing "make" or "all" target : builds the kernel module object (the .ko)
