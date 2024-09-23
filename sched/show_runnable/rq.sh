@@ -7,6 +7,10 @@ trap 'pkill t1; pkill t2; pkill t3' INT QUIT EXIT
  1 => show system-wide runnable/running processes "
   exit 1
 }
+SCHED_FILE=/sys/kernel/debug/sched/debug
+[[ $(id -u) -ne 0 ]] && {
+  echo "need root to view ${SCHED_FILE}" ; exit 1
+}
 
 taskset -c 02 ./t1 a > /dev/null &
 taskset -c 02 ./t2 a > /dev/null &
