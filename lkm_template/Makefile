@@ -1,11 +1,13 @@
 # ch5/lkm_template/Makefile
 # ***************************************************************
-# This program is from the source code released for the book
+# This program is part of the source code released for the book
 #  "Linux Kernel Programming" 2E
 #  (c) Author: Kaiwan N Billimoria
 #  Publisher:  Packt
 #  GitHub repository:
 #  https://github.com/PacktPublishing/Linux-Kernel-Programming_2E
+#
+# From: Ch 5 : Writing Your First Kernel Module LKMs, Part 2
 # ***************************************************************
 # Brief Description:
 # A 'better' Makefile template for Linux LKMs (Loadable Kernel Modules); besides
@@ -161,7 +163,7 @@ clean:
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
 # from 'indent'; comment out if you want the backup kept
-	rm -f *~ *.dtb
+	rm -f *.dtb *.dtbo
 
 # Any usermode programs to build? Insert the build target(s) below
 
