@@ -6,8 +6,9 @@ targets.
 By 'follow', what we really mean is, use them! They help you perform key sanity
 checks on your code, via code-style checking, static and dynamic analysis tools.
 
-The output of the 'make help' below shows the targets:
+The output of the `make help` below shows the targets:
 
+`
 $ make help
 === Makefile Help : additional targets available ===
 
@@ -44,10 +45,10 @@ tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir abov
         TIP: When extracting, to extract into a directory with the same name as the tar file, do this:
               tar -xvf lkm_template.tar.xz --one-top-level
 help       : this help target
-$ 
+$` 
 
 -----------------------------------------------------------------------
-TIP
+**TIP**
 On Ubuntu 22.04 or earlier, it's possible that the module build fails with this error:
 
 `gcc-11: error: unrecognized command-line option ‘-ftrivial-auto-var-init=zero’`
@@ -58,25 +59,31 @@ It's a limitation within GCC ver 11; to fix it, install gcc-12, set CC to it in 
 
 In the Makefile, add this line:
 
-`CC := gcc-12`
+`CC := gcc-12 `
 
-`make`
------------------------------------------------------------------------
+and then rebuild...
 
 
 A few generic important rules / a quick Checklist for the Programmer
 ----------------------------------------------------------------------------------
 DID YOU REMEMBER TO
+
 ✔ Rule #1 : Check all APIs for their failure case
+
 ✔ Rule #2 : Compile with warnings on (-Wall -Wextra) and eliminate all
    warnings as far as is possible
+
 ✔ Rule #3 : Never trust [user] input; validate it
+
 ✔ Rule #4 : Use assertions in your code
+
 ✔ Rule #5 : Eliminate unused (or dead) code from the codebase immediately
+
 ✔ Rule #6 : Test thoroughly; ideally, 100% code coverage is the objective.
    Take the time and trouble to learn to use these powerful kernel-space tools:
    memory checkers (KASAN, kernel memory leak detector, KCSAN, UBSAN, etc),
    static and dynamic analyzers, security checkers (checksec), fuzzers, etc
+
 ✔ Rule #7 : Do NOT Assume Anything
    (“ASSUME : makes an ASS out of U and ME” :-) )
 
@@ -87,8 +94,11 @@ LOW-LEVEL SOFTWARE DESIGN: https://kaiwantech.wordpress.com/2017/01/03/low-level
 ----------------------------------------------------------------------------------
 FYI, the checkpatch.pl Perl script used here is part of the Linux kernel source;
 you can always download it from here:
+
 https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl
 ... or access it on your local system via
- ${KDIR}/scripts/checkpatch.pl
-; where KDIR is the location of your local kernel source tree (could even
+
+` ${KDIR}/scripts/checkpatch.pl`
+
+; where `KDIR` is the location of your local kernel source tree (could even
 point to the kernel headers tree).
