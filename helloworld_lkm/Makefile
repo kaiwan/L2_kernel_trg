@@ -1,6 +1,7 @@
 # Simplest LKM Makefile
 MODNAME = hello
 
+#CC := gcc-12
 obj-m	:= $(MODNAME).o
 
 KDIR	:= /lib/modules/$(shell uname -r)/build
