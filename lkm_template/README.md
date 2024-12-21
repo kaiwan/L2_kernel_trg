@@ -46,7 +46,24 @@ tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir abov
 help       : this help target
 $ 
 
-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------
+TIP
+On Ubuntu 22.04 or earlier, it's possible that the module build fails with this error:
+
+`gcc-11: error: unrecognized command-line option ‘-ftrivial-auto-var-init=zero’`
+
+It's a limitation within GCC ver 11; to fix it, install gcc-12, set CC to it in the Makefile and retry:
+
+`sudo apt install gcc-12`
+
+In the Makefile, add this line:
+
+`CC := gcc-12`
+
+`make`
+-----------------------------------------------------------------------
+
+
 A few generic important rules / a quick Checklist for the Programmer
 ----------------------------------------------------------------------------------
 DID YOU REMEMBER TO
@@ -67,6 +84,7 @@ Also see:
 LOW-LEVEL SOFTWARE DESIGN: https://kaiwantech.wordpress.com/2017/01/03/low-level-software-design/
 
 
+----------------------------------------------------------------------------------
 FYI, the checkpatch.pl Perl script used here is part of the Linux kernel source;
 you can always download it from here:
 https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl
