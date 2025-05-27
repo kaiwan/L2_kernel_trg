@@ -33,7 +33,7 @@
 #------------------------------------------------------------------
 # IMPORTANT : Set FNAME_C to the kernel module name source filename (without .c).
 # This enables you to use this Makefile as a template; just update this variable!
-# As well, the MYDEBUG variable (see it below) can be set to 'y' or 'n' (no being
+# As well, the KEEP_DEBUG_INFO variable (see it below) can be set to 'y' or 'n' (no being
 # the default)
 FNAME_C ?= lkm_template
 ifeq ($(FNAME_C),)
@@ -84,7 +84,7 @@ PWD            := $(shell pwd)
 obj-m          += ${FNAME_C}.o
 
 #--- Debug or production mode?
-# Set the MYDEBUG variable accordingly to y/n resp. We keep it off (n) by default.
+# Set the KEEP_DEBUG_INFO variable accordingly to y/n resp. We keep it off (n) by default.
 # (Actually, debug info is always going to be generated when you build the
 # module on a debug kernel, where CONFIG_DEBUG_INFO is defined, making this
 # setting of the ccflags-y (or the older EXTRA_CFLAGS) variable mostly redundant
@@ -92,13 +92,13 @@ obj-m          += ${FNAME_C}.o
 # This simply helps us influence the build on a production kernel, forcing
 # generation of debug symbols, if so required. Also, realize that the DEBUG
 # macro is turned on by many CONFIG_*DEBUG* options; hence, we use a different
-# macro var name, MYDEBUG).
-MYDEBUG := n
+# macro var name, KEEP_DEBUG_INFO).
+KEEP_DEBUG_INFO := n
 DBG_STRIP := y
-ifeq (${MYDEBUG}, y)
+ifeq (${KEEP_DEBUG_INFO}, y)
 # https://www.kernel.org/doc/html/latest/kbuild/makefiles.html#compilation-flags
 # EXTRA_CFLAGS deprecated; use ccflags-y
-  ccflags-y   += -DDEBUG -g -ggdb -gdwarf-4 -Wall -fno-omit-frame-pointer -fvar-tracking-assignments
+  ccflags-y   += -DDEBUG -g -ggdb -gdwarf-4 -Og -Wall -fno-omit-frame-pointer -fvar-tracking-assignments
   DBG_STRIP := n
 else
   ccflags-y   += -UDEBUG -Wall
@@ -267,13 +267,13 @@ help:
 	@echo '=== Makefile Help : additional targets available ==='
 	@echo
 	@echo 'TIP: Type make <tab><tab> to show all valid targets'
-	@echo 'FYI: KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y="${ccflags-y}" MYDEBUG=${MYDEBUG} DBG_STRIP=${DBG_STRIP}'
+	@echo 'FYI: KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y="${ccflags-y}" KEEP_DEBUG_INFO=${KEEP_DEBUG_INFO} DBG_STRIP=${DBG_STRIP}'
 
 	@echo
 	@echo '--- 'usual' kernel LKM targets ---'
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
 	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/).'
-	@echo '            : Takes care of performing debug-only symbols stripping iff MYDEBUG=n and not using module signature'
+	@echo '            : Takes care of performing debug-only symbols stripping iff KEEP_DEBUG_INFO=n and not using module signature'
 	@echo 'dt          : compiles the Device Tree Blob (DTB) from the DTS file (applicable to ARM, PPC, RISC-V, etc)'
 	@echo 'nsdeps      : namespace dependencies resolution; for possibly importing namespaces'
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
