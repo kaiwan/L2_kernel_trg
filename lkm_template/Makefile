@@ -127,7 +127,9 @@ endif
 
 all:
 	@echo
-	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y="${ccflags-y}" MYDEBUG=${MYDEBUG} DBG_STRIP=${DBG_STRIP} ---'
+	@echo -n "\e[1m\e[41m"
+	@echo '--- Building : KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y="${ccflags-y}" KEEP_DEBUG_INFO=${KEEP_DEBUG_INFO} DBG_STRIP=${DBG_STRIP} ---'
+	@echo -n "\e[0m"
 	@${CC} --version|head -n1
 	@echo
 	make -C $(KDIR) M=$(PWD) modules
@@ -136,11 +138,15 @@ all:
 	fi
 install:
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- installing ---"
+	@echo -n "\e[0m"
 	@echo " [First, invoking the 'make' ]"
 	make
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo " [Now for the 'sudo make install' ]"
+	@echo -n "\e[0m"
 	sudo make -C $(KDIR) M=$(PWD) modules_install
 	sudo depmod
 	@echo " [If !debug and !(module signing), stripping debug info from ${KMODDIR}/extra/${FNAME_C}.ko]"
@@ -151,15 +157,21 @@ dt:
 ifeq (,$(shell which dtc))
 	$(error ERROR: install the DTC compiler first)
 endif
-	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC/etc) ---"
+	@echo -n "\e[1m\e[41m"
+	@echo "--- compiles the Device Tree Blob (DTB) from the DTS (ARM/PPC/Risc-V/etc) ---"
+	@echo -n "\e[0m"
 	dtc -@ -I dts -O dtb -o $(FNAME_C).dtb $(FNAME_C).dts
 	# DTBO - Device Tree Blob Overlay
 nsdeps:
+	@echo -n "\e[1m\e[41m"
 	@echo "--- nsdeps (namespace dependencies resolution; for possibly importing ns's) ---"
+	@echo -n "\e[0m"
 	make -C $(KDIR) M=$(PWD) nsdeps
 clean:
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- cleaning ---"
+	@echo -n "\e[0m"
 	@echo
 	make -C $(KDIR) M=$(PWD) clean
 # from 'indent'; comment out if you want the backup kept
@@ -184,7 +196,9 @@ ifeq (,$(shell which indent))
 	$(error ERROR: install indent first)
 endif
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- applying kernel code style indentation with indent ---"
+	@echo -n "\e[0m"
 	@echo
 	mkdir bkp 2> /dev/null; cp -f *.[chsS] bkp/
 	${INDENT} -linux --line-length95 *.[chsS]
@@ -194,7 +208,9 @@ endif
 checkpatch:
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- kernel code style check with checkpatch.pl ---"
+	@echo -n "\e[0m"
 	@echo
 	$(KDIR)/scripts/checkpatch.pl --no-tree -f --max-line-length=95 *.[ch]
 	  # add source files as required
@@ -214,7 +230,9 @@ ifeq (,$(shell which sparse))
 endif
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- static analysis with sparse ---"
+	@echo -n "\e[0m"
 	@echo
 # If you feel it's too much, use C=1 instead
 # NOTE: deliberately IGNORING warnings from kernel headers!
@@ -224,7 +242,9 @@ endif
 sa_gcc:
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- static analysis with gcc ---"
+	@echo -n "\e[0m"
 	@echo
 	make W=1 -C $(KDIR) M=$(PWD) modules
 
@@ -235,7 +255,9 @@ ifeq (,$(shell which flawfinder))
 endif
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- static analysis with flawfinder ---"
+	@echo -n "\e[0m"
 	@echo
 	flawfinder *.[ch]
 
@@ -246,7 +268,9 @@ ifeq (,$(shell which cppcheck))
 endif
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- static analysis with cppcheck ---"
+	@echo -n "\e[0m"
 	@echo
 	cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
 
@@ -255,7 +279,9 @@ tarxz-pkg:
 	rm -f ../${FNAME_C}.tar.xz 2>/dev/null
 	make clean
 	@echo
+	@echo -n "\e[1m\e[41m"
 	@echo "--- packaging ---"
+	@echo -n "\e[0m"
 	@echo
 	tar caf ../${FNAME_C}.tar.xz *
 	ls -l ../${FNAME_C}.tar.xz
@@ -264,13 +290,17 @@ tarxz-pkg:
 	@echo '              tar -xvf ${FNAME_C}.tar.xz --one-top-level'
 
 help:
+	@echo -n "\e[1m\e[41m"
 	@echo '=== Makefile Help : additional targets available ==='
+	@echo -n "\e[0m"
 	@echo
 	@echo 'TIP: Type make <tab><tab> to show all valid targets'
 	@echo 'FYI: KDIR=${KDIR} ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} ccflags-y="${ccflags-y}" KEEP_DEBUG_INFO=${KEEP_DEBUG_INFO} DBG_STRIP=${DBG_STRIP}'
 
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo '--- 'usual' kernel LKM targets ---'
+	@echo -n "\e[0m"
 	@echo 'typing "make" or "all" target : builds the kernel module object (the .ko)'
 	@echo 'install     : installs the kernel module(s) to INSTALL_MOD_PATH (default here: /lib/modules/$(shell uname -r)/).'
 	@echo '            : Takes care of performing debug-only symbols stripping iff KEEP_DEBUG_INFO=n and not using module signature'
@@ -279,13 +309,17 @@ help:
 	@echo 'clean       : cleanup - remove all kernel objects, temp files/dirs, etc'
 
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo '--- kernel code style targets ---'
+	@echo -n "\e[0m"
 	@echo 'code-style : "wrapper" target over the following kernel code style targets'
 	@echo ' indent     : run the $(INDENT) utility on source file(s) to indent them as per the kernel code style'
 	@echo ' checkpatch : run the kernel code style checker tool on source file(s)'
 
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo '--- kernel static analyzer targets ---'
+	@echo -n "\e[0m"
 	@echo 'sa         : "wrapper" target over the following kernel static analyzer targets'
 	@echo ' sa_sparse     : run the static analysis sparse tool on the source file(s)'
 	@echo ' sa_gcc        : run gcc with option -W1 ("Generally useful warnings") on the source file(s)'
@@ -294,17 +328,23 @@ help:
 	@echo 'TIP: use Coccinelle as well: https://www.kernel.org/doc/html/v6.1/dev-tools/coccinelle.html'
 
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo '--- kernel dynamic analysis targets ---'
+	@echo -n "\e[0m"
 	@echo 'da_kasan   : DUMMY target: this is to remind you to run your code with the dynamic analysis KASAN tool enabled; requires configuring the kernel with CONFIG_KASAN On, rebuild and boot it'
 	@echo 'da_lockdep : DUMMY target: this is to remind you to run your code with the dynamic analysis LOCKDEP tool (for deep locking issues analysis) enabled; requires configuring the kernel with CONFIG_PROVE_LOCKING On, rebuild and boot it'
 	@echo 'TIP: Best to build a debug kernel with several kernel debug config options turned On, boot via it and run all your test cases'
 
 	@echo
+	@echo -n "\e[1m\e[34m"
 	@echo '--- misc targets ---'
+	@echo -n "\e[0m"
 	@echo 'tarxz-pkg  : tar and compress the LKM source files as a tar.xz into the dir above; allows one to transfer and build the module on another system'
 	@echo '        TIP: When extracting, to extract into a directory with the same name as the tar file, do this:'
 	@echo '              tar -xvf ${FNAME_C}.tar.xz --one-top-level'
+	@echo -n "\e[1m\e[31m"
 	@echo '--- Tips ---'
+	@echo -n "\e[0m"
 	@echo '  If the build fails with a (GCC compiler failure) message like'
 	@echo '   unrecognized command-line option ‘-ftrivial-auto-var-init=zero’'
 	@echo '  it's likely that you're using an older GCC. Try installing gcc-12 (or later),'
