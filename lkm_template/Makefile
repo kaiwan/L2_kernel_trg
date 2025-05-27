@@ -219,10 +219,24 @@ checkpatch:
 #--- Static Analysis
 # sa : "wrapper" target over the following kernel static analyzer targets
 sa:
+	make sa_clangtidy
 	make sa_sparse
 	make sa_gcc
 	make sa_flawfinder
 	make sa_cppcheck
+
+# static analysis with clang-tidy
+sa_clangtidy:
+ifeq (,$(shell which clang-tidy))
+	$(error ERROR: install clang-tidy first)
+endif
+	make clean
+	@echo
+	@echo -n "\e[1m\e[41m"
+	@echo "--- static analysis with clang-tidy ---"
+	@echo -n "\e[0m"
+	@echo
+	-CHECKS_ON="-*,clang-analyzer-*,bugprone-*,cert-*,concurrency-*,performance-*,portability-*,linuxkernel-*,readability-*,misc-*"; CHECKS_OFF="-clang-analyzer-cplusplus*,-misc-include-cleaner,-readability-identifier-length,-readability-braces-around-statements" ; clang-tidy -header-filter=.* --use-color *.[ch] -checks=$$CHECKS_ON,$$CHECKS_OFF
 
 # static analysis with sparse
 sa_sparse:
@@ -322,6 +336,7 @@ help:
 	@echo '--- kernel static analyzer targets ---'
 	@echo -n "\e[0m"
 	@echo 'sa         : "wrapper" target over the following kernel static analyzer targets'
+	@echo ' sa_clangtidy  : run the static analysis clang-tidy tool on the source file(s)'
 	@echo ' sa_sparse     : run the static analysis sparse tool on the source file(s)'
 	@echo ' sa_gcc        : run gcc with option -W1 ("Generally useful warnings") on the source file(s)'
 	@echo ' sa_flawfinder : run the static analysis flawfinder tool on the source file(s)'
