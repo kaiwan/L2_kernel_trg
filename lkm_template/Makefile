@@ -201,7 +201,8 @@ endif
 	@echo -n "\e[0m"
 	@echo
 	mkdir bkp 2> /dev/null; cp -f *.[chsS] bkp/
-	${INDENT} -linux --line-length95 *.[chsS]
+# Prefixing a hyphen before a command has make continue even if the cmd fails
+	-${INDENT} -linux --line-length95 *.[chsS]
 	  # add source files as required
 
 # Detailed check on the source code styling / etc
@@ -212,7 +213,7 @@ checkpatch:
 	@echo "--- kernel code style check with checkpatch.pl ---"
 	@echo -n "\e[0m"
 	@echo
-	$(KDIR)/scripts/checkpatch.pl --no-tree -f --max-line-length=95 *.[ch]
+	-$(KDIR)/scripts/checkpatch.pl --no-tree -f --max-line-length=95 *.[ch]
 	  # add source files as required
 
 #--- Static Analysis
@@ -236,7 +237,7 @@ endif
 	@echo
 # If you feel it's too much, use C=1 instead
 # NOTE: deliberately IGNORING warnings from kernel headers!
-	make -Wsparse-all C=2 CHECK="/usr/bin/sparse --os=linux --arch=$(ARCH)" -C $(KDIR) M=$(PWD) modules 2>&1 |egrep -v "^\./include/.*\.h|^\./arch/.*\.h"
+	-make -Wsparse-all C=2 CHECK="/usr/bin/sparse --os=linux --arch=$(ARCH)" -C $(KDIR) M=$(PWD) modules 2>&1 |egrep -v "^\./include/.*\.h|^\./arch/.*\.h"
 
 # static analysis with gcc
 sa_gcc:
@@ -246,7 +247,7 @@ sa_gcc:
 	@echo "--- static analysis with gcc ---"
 	@echo -n "\e[0m"
 	@echo
-	make W=1 -C $(KDIR) M=$(PWD) modules
+	-make W=1 -C $(KDIR) M=$(PWD) modules
 
 # static analysis with flawfinder
 sa_flawfinder:
@@ -259,7 +260,7 @@ endif
 	@echo "--- static analysis with flawfinder ---"
 	@echo -n "\e[0m"
 	@echo
-	flawfinder *.[ch]
+	-flawfinder *.[ch]
 
 # static analysis with cppcheck
 sa_cppcheck:
@@ -272,7 +273,7 @@ endif
 	@echo "--- static analysis with cppcheck ---"
 	@echo -n "\e[0m"
 	@echo
-	cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
+	-cppcheck -v --force --enable=all -i .tmp_versions/ -i *.mod.c -i bkp/ --suppress=missingIncludeSystem .
 
 # Packaging: just generates a tar.xz of the source as of now
 tarxz-pkg:
