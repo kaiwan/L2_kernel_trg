@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 name=$(basename $0)
 KMOD=taskdtlv2
 
@@ -24,7 +24,7 @@ do
   sudo bash -c "echo ${tid} > /dev/taskdtl"
   let i=i+1
 done
-dmesg
+sudo dmesg
 }
 
 ### "main" here
@@ -52,4 +52,4 @@ lsmod | grep -q ${KMOD} || {
  exit 0
 }
 sudo bash -c "echo $1 > /dev/taskdtl"
-dmesg
+sudo dmesg

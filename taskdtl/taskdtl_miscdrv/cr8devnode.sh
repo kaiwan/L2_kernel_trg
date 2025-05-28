@@ -8,7 +8,7 @@ DEVNODE=/dev/taskdtl
 
 MAJOR=10   # misc class is always major # 10
 unalias dmesg 2>/dev/null
-MINOR=$(dmesg |grep "${OURMODNAME}\:minor\=" |cut -d"=" -f2)
+MINOR=$(sudo dmesg |grep "${OURMODNAME}\:minor\=" |cut -d"=" -f2)
 [ -z "${MINOR}" ] && {
   echo "${name}: failed to retrieve the minor #, aborting ..."
   exit 1
