@@ -6,6 +6,7 @@ obj-m	:= $(MODNAME).o
 
 KDIR	:= /lib/modules/$(shell uname -r)/build
 PWD	:= $(shell pwd)
+#ccflags-y += -DDEBUG
 
 all: module
 
