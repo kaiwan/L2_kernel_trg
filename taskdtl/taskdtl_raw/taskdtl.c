@@ -27,7 +27,6 @@
 
 MODULE_LICENSE("Dual MIT/GPL");
 
-//#define MODNAME    "taskdtl"
 static int pid;
 module_param(pid, int, 0);
 MODULE_PARM_DESC(pid, "set this to the PID of the process or thread to dump task info about");
@@ -107,6 +106,7 @@ static int disp_task_details(struct task_struct *p)
 		"separate (not within the task struct)\n"
 #endif
 		, ti);
+		pr_info(" ti->flags : 0x%x\n", ti->flags);
 	}
 
 	pr_info(
@@ -122,7 +122,7 @@ static int disp_task_details(struct task_struct *p)
 #ifdef CONFIG_GCC_PLUGIN_STACKLEAK
 	"  (GCC STACKLEAK) lowest stack : 0x%lx\n"
 #endif
-	"flags : 0x%x\n"
+	"task flags : 0x%x\n"
 	"sched ::\n"
 #ifdef CONFIG_THREAD_INFO_IN_TASK
 	"  curr CPU    : %3d\n"
@@ -133,7 +133,8 @@ static int disp_task_details(struct task_struct *p)
 	"  normal prio : %3d\n"
 	"  RT priority : %3d\n"
 	"  vruntime    : %llu\n",
-	p->stack,
+	end_of_stack(p),
+	//p->stack,
 #ifdef CONFIG_GCC_PLUGIN_STACKLEAK
 	p->lowest_stack,
 #endif
@@ -233,7 +234,7 @@ static int disp_task_details(struct task_struct *p)
 		/* userspace mappings */
 		//spin_lock(&p->mm->arg_lock);
 		pr_info(
-		"mm userspace mapings (high to low) ::\n"
+		"mm userspace mappings (high to low) ::\n"
 		" env        : 0x%lx - 0x%lx  [%6u bytes]\n"
 		" args       : 0x%lx - 0x%lx  [%6u bytes]\n"
 	//	" stack      : 0x%lx - 0x%lx  [%6u bytes]\n"
