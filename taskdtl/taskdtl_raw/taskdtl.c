@@ -27,7 +27,7 @@
 
 MODULE_LICENSE("Dual MIT/GPL");
 
-#define MODNAME    "taskdtl"
+//#define MODNAME    "taskdtl"
 static int pid;
 module_param(pid, int, 0);
 MODULE_PARM_DESC(pid, "set this to the PID of the process or thread to dump task info about");
@@ -401,13 +401,13 @@ static int __init taskdtl_init(void)
 	struct task_struct *tp;
 	
 	if (0 == pid) {
-		pr_err("%s: pl pass a valid PID as parameter to this kernel module\n", MODNAME);
+		pr_err("%s: pl pass a valid PID as parameter to this kernel module\n", KBUILD_MODNAME);
 		return -EINVAL;
 	}
 	tp = pid_task(find_vpid(pid), PIDTYPE_PID);
 	if (!tp) {
 		pr_err("%s: failed to obtain task struct pointer for PID %d\n",
-			MODNAME, pid);
+			KBUILD_MODNAME, pid);
 		return -EINVAL;
 	}
 	pr_debug("pid=%d, tp = 0x%lx\n", pid, tp);
@@ -416,7 +416,7 @@ static int __init taskdtl_init(void)
 }
 static void __exit taskdtl_exit(void)
 {
-	pr_info("%s: exiting now\n", MODNAME);
+	pr_info("%s: exiting now\n", KBUILD_MODNAME);
 #if 0
     dump_stack();
 #endif
