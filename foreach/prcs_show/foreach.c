@@ -87,7 +87,14 @@ static ssize_t taskinfo_write(struct file *filp, const char __user *buf,
 
 /* Minor-specific open routines */
 static const struct file_operations taskinfo_fops = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(6, 12, 0)
+/* no_llseek by default introduced at v2.6.37-rc1 and
+ * removed in 6.12.0
+ */
 	.llseek = no_llseek,
+#else
+	.llseek = noop_llseek,
+#endif
 	.read = taskinfo_read,	// do this with ioctl..better.
 	.write = taskinfo_write,
 };
