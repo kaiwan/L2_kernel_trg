@@ -63,7 +63,7 @@ ifeq ($(ARCH),arm)
 else ifeq ($(ARCH),arm64)
   # *UPDATE* 'KDIR' below to point to the ARM64 (AArch64) Linux kernel source
   # tree on your box
-  KDIR ?= ~/arm64_prj/kernel/linux
+  KDIR ?= /xtra/rpi_work/rpi_64bit/kernel_rpi/linux/
 else ifeq ($(ARCH),powerpc)
   # *UPDATE* 'KDIR' below to point to the PPC64 Linux kernel source tree on your box
   KDIR ?= ~/ppc_prj/kernel/linux-5.4
