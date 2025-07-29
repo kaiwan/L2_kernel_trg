@@ -30,6 +30,15 @@ KABI_REF="$2"
 [[ ! -f ${MYMOD} ]] && die "Couldn't locate your specified module \"${MYMOD}"\"
 [[ ! -f ${KABI_REF} ]] && die "Couldn't locate the specified stable-kernel-abi file \"${KABI_REF}"\"
 
+# what if the kmod's compressed (zstd); uncompress it
+ext="${MYMOD##*.}"
+#echo "ext:$ext"
+[[ "${ext}" = "zst" ]] && {
+  rm -f /tmp/mymod.ko
+  zstd -d ${MYMOD} -o /tmp/mymod.ko >/dev/null || die "zstd uncompression on module failed"
+  MYMOD=/tmp/mymod.ko
+}
+
 for sym in $(nm -u ${MYMOD} | awk '{print $2}'); do
     #if grep -w "$sym" /usr/src/kernels/$(uname -r)/Module.kabi_x86_64 >/dev/null; then
     if grep -w "${sym}" ${KABI_REF} >/dev/null; then
