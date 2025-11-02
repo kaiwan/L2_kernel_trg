@@ -88,7 +88,6 @@ ifeq (${DEBUG_MODE}, y)
   DBG_STRIP := n
   $(info KDIR = $(KDIR)])
 else
-  INSTALL_MOD_STRIP := 1
   ccflags-y   += -UDEBUG -Wall
   $(info KDIR = $(KDIR))
 endif
