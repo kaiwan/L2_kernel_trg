@@ -154,7 +154,7 @@ install:
            sudo ${STRIP} --strip-debug ${KMODDIR}/extra/${FNAME_C}.ko ; \
 	fi
 dt:
-ifeq (,$(shell which dtc))
+ifeq (,$(shell which dtc 2>/dev/null))
 	$(error ERROR: install the DTC compiler first)
 endif
 	@echo -n "\e[1m\e[41m"
@@ -192,7 +192,7 @@ code-style:
 # coding style guidelines.
 # Note! original source file(s) is overwritten, so we back it up.
 indent:
-ifeq (,$(shell which indent))
+ifeq (,$(shell which indent 2>/dev/null))
 	$(error ERROR: install indent first)
 endif
 	@echo
@@ -227,7 +227,7 @@ sa:
 
 # static analysis with clang-tidy
 sa_clangtidy:
-ifeq (,$(shell which clang-tidy))
+ifeq (,$(shell which clang-tidy 2>/dev/null))
 	$(error ERROR: install clang-tidy first)
 endif
 	make clean
@@ -240,7 +240,7 @@ endif
 
 # static analysis with sparse
 sa_sparse:
-ifeq (,$(shell which sparse))
+ifeq (,$(shell which sparse 2>/dev/null))
 	$(error ERROR: install sparse first)
 endif
 	make clean
@@ -265,7 +265,7 @@ sa_gcc:
 
 # static analysis with flawfinder
 sa_flawfinder:
-ifeq (,$(shell which flawfinder))
+ifeq (,$(shell which flawfinder 2>/dev/null))
 	$(error ERROR: install flawfinder first)
 endif
 	make clean
@@ -278,7 +278,7 @@ endif
 
 # static analysis with cppcheck
 sa_cppcheck:
-ifeq (,$(shell which cppcheck))
+ifeq (,$(shell which cppcheck 2>/dev/null))
 	$(error ERROR: install cppcheck first)
 endif
 	make clean
