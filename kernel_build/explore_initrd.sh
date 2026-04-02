@@ -32,27 +32,8 @@ mkdir -p ${TMPDIR} || exit 1
 cp $1 ${TMPDIR}/${DEST} || exit 1
 cd ${TMPDIR}
 
-file --brief ${DEST} |grep "^XZ" >/dev/null && {
-	TYPE=xz
-	mv ${DEST} ${DEST}.xz
-	xz -d ${DEST}.gz
-	decho "xz"
-}
-file --brief ${DEST} |grep -i -e "gzip|gz" >/dev/null && {
-	TYPE=gzip
-	mv ${DEST} ${DEST}.gz
-	gzip -d ${DEST}.gz
-	decho "gzip"
-}
-# If it's neither xz / gzip, assuming it's already cpio
-file --brief ${DEST} |grep -i "cpio" >/dev/null || die "not a supported image type :
-[$(file ${DEST})]"
-	
-mkdir -p ${DEST_DIR}
-cd ${DEST_DIR}
-echo "[+] Extracting now ..."
-cpio -i < ../${DEST} || die "cpio failed to extract initrd image"
-echo "Result in ${TMPDIR}/${DEST_DIR}/"
+unmkinitramfs ${DEST} .
+return
 }
 
 ##### execution starts here #####
