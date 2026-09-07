@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Demand paging - a demo</title>
+<style>
+:root{
+  --paper:#E7E9ED;
+  --panel:#F3F4F7;
+  --ink:#1B2A41;
+  --ink-soft:#5A6a80;
+  --rule:#A9B2C0;
+  --rule-faint:#C8CFD9;
+  --cold:#4A76A8;      /* mapped, but no frame was allocated */
+  --cold-fill:#D6E2EF;
+  --hot:#C2551E;       /* a real page frame is committed to this page */
+  --hot-fill:#F2DCCB;
+  --fault:#E0A32E;     /* the fault event itself */
+  --disk:#3E7A5C;      /* major fault: went to disk */
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"DejaVu Sans Mono",monospace;
+  --sans:Inter,-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:15px;line-height:1.55;
+  padding:28px 24px 56px;
+}
+.wrap{max-width:1000px;margin:0 auto}
+
+h1{
+  font-family:var(--mono);font-size:20px;font-weight:500;
+  letter-spacing:-0.01em;margin:0 0 2px;
+}
+.sub{color:var(--ink-soft);font-size:14px;margin:0 0 22px;max-width:62ch}
+
+/* ---- scene switch ---- */
+.scenes{display:flex;gap:0;border-bottom:1px solid var(--rule);margin-bottom:20px}
+.scene-btn{
+  appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--sans);font-size:14px;color:var(--ink-soft);
+  padding:8px 16px 9px;margin-bottom:-1px;cursor:pointer;
+}
+.scene-btn:hover{color:var(--ink)}
+.scene-btn[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--hot)}
+.scene-btn:focus-visible{outline:2px solid var(--cold);outline-offset:2px}
+
+/* ---- hero counters ---- */
+.meters{display:flex;align-items:flex-end;gap:0;margin-bottom:6px;flex-wrap:wrap}
+.meter{padding-right:44px}
+.meter .k{font-family:var(--mono);font-size:11.5px;color:var(--ink-soft);margin-bottom:-2px}
+.meter .v{font-family:var(--mono);font-size:38px;font-variant-numeric:tabular-nums;
+  letter-spacing:-0.03em;line-height:1.05}
+.meter .u{font-size:16px;color:var(--ink-soft);letter-spacing:0}
+.meter.resident .v{color:var(--hot)}
+.meter.small .v{font-size:22px}
+.ratio{
+  font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);
+  border-top:1px solid var(--rule-faint);padding-top:6px;margin-bottom:20px;
+}
+
+/* ---- diagram ---- */
+.stage{background:var(--panel);border:1px solid var(--rule-faint);padding:4px 8px 8px}
+svg{display:block;width:100%;height:auto}
+text{font-family:var(--mono);fill:var(--ink)}
+.colhead{font-size:11px;fill:var(--ink-soft);letter-spacing:0.02em}
+.vbox,.pbox,.fbox{stroke:var(--rule);stroke-width:1;fill:#fff}
+.lbl{font-size:11px}
+.lbl-dim{font-size:11px;fill:var(--ink-soft)}
+.arrow{stroke:var(--rule);stroke-width:1.4;fill:none}
+
+/* semantic states */
+.st-zero .vbox,.st-zero .pbox{stroke:var(--cold);fill:var(--cold-fill)}
+.st-zero .lbl{fill:var(--cold)}
+.st-frame .vbox,.st-frame .pbox{stroke:var(--hot);fill:var(--hot-fill)}
+.st-frame .lbl{fill:var(--hot)}
+.st-disk .vbox,.st-disk .pbox{stroke:var(--disk);fill:#DCEBE3}
+.fbox.used{stroke:var(--hot);fill:var(--hot-fill)}
+.fbox.zerop{stroke:var(--cold);fill:var(--cold-fill)}
+.arrow.cold{stroke:var(--cold)}
+.arrow.hot{stroke:var(--hot);stroke-width:1.8}
+.arrow.disk{stroke:var(--disk);stroke-width:1.8;stroke-dasharray:5 3}
+.fbox.diskp{stroke:var(--disk);fill:#DCEBE3}
+
+@keyframes fault-pulse{
+  0%{stroke:var(--fault);stroke-width:3.5;fill:#FBEFD3}
+  100%{stroke-width:1}
+}
+.flash .vbox,.flash .pbox{animation:fault-pulse 620ms ease-out}
+.faultmark{font-size:10.5px;fill:var(--fault)}
+/* Deterministic highlight used by the GIF capture script; headless screenshots
+   cannot reliably be timed against a CSS animation. */
+.flashnow .vbox,.flashnow .pbox{stroke:var(--fault);stroke-width:3.5;fill:#FBEFD3}
+
+/* ---- narration ---- */
+.code{
+  font-family:var(--mono);font-size:15px;margin:18px 0 0;
+  padding:9px 12px;background:#fff;border-left:3px solid var(--hot);
+  overflow-x:auto;white-space:pre;
+}
+.code.k-read{border-left-color:var(--cold)}
+.code.k-reserve{border-left-color:var(--rule)}
+.code.k-major{border-left-color:var(--disk)}
+.note{margin:10px 0 0;max-width:74ch;min-height:3.1em}
+.note b{font-weight:600}
+
+/* ---- controls ---- */
+.bar{display:flex;align-items:center;gap:10px;margin-top:18px;
+  border-top:1px solid var(--rule-faint);padding-top:14px;flex-wrap:wrap}
+button.ctl{
+  font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:#fff;border:1px solid var(--rule);padding:6px 15px;cursor:pointer;
+}
+button.ctl:hover:not(:disabled){border-color:var(--ink)}
+button.ctl:disabled{opacity:.38;cursor:default}
+button.ctl:focus-visible{outline:2px solid var(--cold);outline-offset:2px}
+button.ctl.play{border-color:var(--ink);background:var(--ink);color:var(--paper)}
+.count{font-family:var(--mono);font-size:12.5px;color:var(--ink-soft);margin-left:auto}
+
+/* ---- legend ---- */
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:22px;
+  font-size:12.5px;color:var(--ink-soft);
+  border-top:1px solid var(--rule-faint);padding-top:12px}
+.legend span{display:flex;align-items:center;gap:7px}
+.sw{width:13px;height:13px;border:1.5px solid;flex:none}
+.sw.res{border-color:var(--rule);background:#fff}
+.sw.cold{border-color:var(--cold);background:var(--cold-fill)}
+.sw.hot{border-color:var(--hot);background:var(--hot-fill)}
+.sw.disk{border-color:var(--disk);background:#DCEBE3}
+
+@media (prefers-reduced-motion:reduce){
+  .flash .vbox,.flash .pbox{animation:none}
+}
+@media (max-width:640px){
+  .meter .v{font-size:28px}
+  .meter{padding-right:26px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>demand paging</h1>
+<p class="sub">What actually happens between <code>mmap()</code> returning a pointer and
+a page frame appearing in RAM. Step through it, or press play.<br>
+Credit: Claude Opus 5</p>
+
+<div class="scenes" role="tablist">
+  <button class="scene-btn" role="tab" id="tab0" aria-selected="true">1 &nbsp;The simple model</button>
+  <button class="scene-btn" role="tab" id="tab1" aria-selected="false">2 &nbsp;Zero page and copy-on-write</button>
+</div>
+
+<div class="meters">
+  <div class="meter">
+    <div class="k">VmSize &mdash; address space reserved</div>
+    <div class="v" id="m-size">0<span class="u"> kB</span></div>
+  </div>
+  <div class="meter resident">
+    <div class="k">VmRSS &mdash; RAM actually committed</div>
+    <div class="v" id="m-rss">0<span class="u"> kB</span></div>
+  </div>
+  <div class="meter small">
+    <div class="k">minor faults</div>
+    <div class="v" id="m-min">0</div>
+  </div>
+  <div class="meter small">
+    <div class="k">major faults</div>
+    <div class="v" id="m-maj">0</div>
+  </div>
+</div>
+<div class="ratio" id="m-ratio">&nbsp;</div>
+
+<div class="stage"><svg id="svg" viewBox="0 0 920 470" role="img"
+     aria-labelledby="svgdesc"><desc id="svgdesc">Virtual pages, page table entries and
+     physical page frames, showing which pages are backed by RAM.</desc></svg></div>
+
+<pre class="code" id="code">&nbsp;</pre>
+<p class="note" id="note">&nbsp;</p>
+
+<div class="bar">
+  <button class="ctl" id="prev">Back</button>
+  <button class="ctl play" id="play">Play</button>
+  <button class="ctl" id="next">Next</button>
+  <button class="ctl" id="reset">Restart</button>
+  <span class="count" id="count"></span>
+</div>
+
+<div class="legend">
+  <span><i class="sw res"></i>reserved &mdash; address space only, no PTE</span>
+  <span><i class="sw cold"></i>mapped to the shared zero page &mdash; no frame allocated</span>
+  <span><i class="sw hot"></i>private page frame allocated &mdash; this is real RAM</span>
+  <span><i class="sw disk"></i>page cache frame, filled from disk</span>
+</div>
+
+</div>
+
+<script>
+"use strict";
+const SVGNS = "http://www.w3.org/2000/svg";
+const PAGE_KB = 4;
+
+/* ---------- geometry ---------- */
+const G = {
+  vx: 10,  vw: 232,
+  px: 348, pw: 172,
+  fx: 662, fw: 248,
+  y0: 52,  rh: 30,  bh: 24
+};
+
+function el(name, attrs, parent){
+  const n = document.createElementNS(SVGNS, name);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function fmt(n){ return n.toLocaleString("en-US"); }
+
+/* ---------- scene state builder ----------
+   page.state : 'res' | 'zero' | 'frame'
+   page.perm  : display string for the PTE
+   page.frame : index into frames[] when state==='frame'
+------------------------------------------- */
+function blank(nPages, nFrames){
+  return {
+    pages : Array.from({length:nPages}, () => ({state:"res", perm:"--", frame:null})),
+    frames: Array.from({length:nFrames}, () => ({use:"free"})),
+    zeroUsers: [],           // page indices pointing at the shared zero page
+    vmsize: 0, vmrss: 0, minflt: 0, majflt: 0,
+    flash: [], code:"", note:"", kind:"reserve", ratio:""
+  };
+}
+function snap(s){
+  return JSON.parse(JSON.stringify(s));
+}
+
+/* Physical frame addresses, deliberately out of order: virtual page order
+   has nothing to do with physical frame order. */
+const PHYS = ["0x0002_1000","0x0009_a000","0x0000_c000","0x0011_4000",
+              "0x0004_e000","0x001c_2000","0x0007_3000","0x0013_d000",
+              "0x000a_8000","0x0016_b000","0x0005_f000","0x001f_0000"];
+
+/* ================= SCENE 1 : the simple model ================= */
+function buildScene1(){
+  const NP = 12, NF = 12;
+  const steps = [];
+  const s = blank(NP, NF);
+
+  s.code = "char *p = mmap(NULL, 100*MB, PROT_READ|PROT_WRITE,\n"
+         + "               MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);";
+  s.kind = "reserve";
+  s.vmsize = 102400; s.vmrss = 0;
+  s.note = "<b>mmap() succeeded and not one byte of RAM was touched.</b> "
+         + "The kernel created a VMA &mdash; a note in the process's memory map saying "
+         + "\u201cthese 25,600 pages belong to you\u201d. Every page table entry is still empty. "
+         + "The 12 pages below stand in for the whole region.";
+  s.ratio = "100 MiB of address space \u00b7 0 kB of RAM";
+  steps.push(snap(s));
+
+  const touch = (pg, frame, code, note) => {
+    s.pages[pg] = {state:"frame", perm:"rw- P", frame:frame};
+    s.frames[frame] = {use:"used"};
+    s.vmrss += PAGE_KB; s.minflt += 1;
+    s.flash = [pg]; s.code = code; s.kind = "write"; s.note = note;
+    s.ratio = fmt(s.vmsize) + " kB reserved \u00b7 " + fmt(s.vmrss)
+            + " kB resident \u00b7 ratio " + Math.round(s.vmsize/s.vmrss) + ":1";
+    steps.push(snap(s));
+    s.flash = [];
+  };
+
+  touch(0, 2, "p[0] = 'x';",
+    "The CPU has no PTE for this address, so it raises a <b>page fault</b> and the kernel "
+    + "takes over in <code>handle_mm_fault()</code>. It grabs a free page frame, zeroes it, "
+    + "and writes the PTE. One byte written, one whole 4 kB frame committed. "
+    + "No disk was involved, so this is a <b>minor fault</b>.");
+
+  touch(1, 7, "p[4096] = 'y';",
+    "Next page, same story: a second fault, a second frame. Note the physical addresses "
+    + "&mdash; virtual page 1 landed nowhere near virtual page 0. "
+    + "<b>Adjacency in the address space says nothing about adjacency in RAM.</b>");
+
+  touch(9, 4, "p[9*4096] = 'z';",
+    "Skipping ahead to page 9. Pages 2 through 8 were never touched, so they cost "
+    + "exactly nothing &mdash; no PTE, no frame. The mapping is <b>sparse</b>, and that is "
+    + "the entire point of allocating lazily.");
+
+  s.code = "/* pages 2\u20138 and 10\u201325,599: never touched */";
+  s.kind = "reserve";
+  s.note = "Three faults later: <b>100 MiB reserved, 12 kB resident.</b> That gap is demand "
+         + "paging. It is also why <code>top</code> shows VIRT wildly exceeding RES for almost "
+         + "every process on your machine, and why the kernel can hand out more address space "
+         + "than you have RAM &mdash; that is <b>overcommit</b>, and the OOM killer is the "
+         + "bill if everyone cashes their cheque at once.";
+  s.ratio = "102,400 kB reserved \u00b7 12 kB resident \u00b7 ratio 8533:1";
+  steps.push(snap(s));
+
+  return {steps, NP, NF, height: 424, zeroPage:false};
+}
+
+/* ========= SCENE 2 : zero page and copy-on-write ========= */
+function buildScene2(){
+  const NP = 6, NF = 6;
+  const steps = [];
+  const s = blank(NP, NF);
+
+  s.code = "char *q = mmap(NULL, 100*MB, PROT_READ|PROT_WRITE,\n"
+         + "               MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);";
+  s.kind = "reserve"; s.vmsize = 102400; s.vmrss = 0;
+  s.note = "Same reservation as before, zoomed in to 6 pages. Now watch what a "
+         + "<b>read</b> does &mdash; because it is not what the simple model says.";
+  s.ratio = "the shared zero page sits below, waiting";
+  steps.push(snap(s));
+
+  /* read faults -> shared zero page, no frame */
+  s.pages[0] = {state:"zero", perm:"r-- P", frame:null};
+  s.zeroUsers = [0];
+  s.minflt = 1; s.flash = [0];
+  s.code = "char c = q[0];";
+  s.kind = "read";
+  s.note = "A fault happened &mdash; the counter moved. But <code>do_anonymous_page()</code> "
+         + "sees this is a read, and instead of allocating anything it points the PTE at the "
+         + "<b>shared zero page</b>, read-only. <b>VmRSS did not move.</b> A page of "
+         + "never-written anonymous memory reads as zeroes, so why store a private copy?";
+  s.ratio = "1 fault \u00b7 0 kB resident";
+  steps.push(snap(s)); s.flash = [];
+
+  s.pages[1] = {state:"zero", perm:"r-- P", frame:null};
+  s.pages[2] = {state:"zero", perm:"r-- P", frame:null};
+  s.pages[3] = {state:"zero", perm:"r-- P", frame:null};
+  s.zeroUsers = [0,1,2,3];
+  s.minflt = 4; s.flash = [1,2,3];
+  s.code = "c = q[4096]; c = q[8192]; c = q[12288];";
+  s.kind = "read";
+  s.note = "Three more read faults, three more PTEs &mdash; all aimed at the "
+         + "<b>same single physical page</b>. Not one per region, not one per process: "
+         + "one per system. You could read-fault a terabyte of anonymous memory and "
+         + "consume 4 kB of RAM.";
+  s.ratio = "4 faults \u00b7 0 kB resident \u00b7 4 kB of RAM backs all of it";
+  steps.push(snap(s)); s.flash = [];
+
+  s.pages[0] = {state:"frame", perm:"rw- P", frame:1};
+  s.frames[1] = {use:"used"};
+  s.zeroUsers = [1,2,3];
+  s.minflt = 5; s.vmrss = PAGE_KB; s.flash = [0];
+  s.code = "q[0] = 'x';";
+  s.kind = "write";
+  s.note = "Page 0 already had a PTE, but a read-only one &mdash; so the write traps as a "
+         + "<b>write-protection fault</b>, the second fault on this same page. "
+         + "<code>do_wp_page()</code> now copies off the zero page: allocate a frame, zero it, "
+         + "rewire the PTE read-write. <b>This is where the RAM is finally spent.</b> "
+         + "Classic copy-on-write, with the zero page as the source.";
+  s.ratio = "5 faults \u00b7 4 kB resident";
+  steps.push(snap(s)); s.flash = [];
+
+  s.code = "/* measured on Linux 6.18, 256 pages per region */";
+  s.kind = "reserve";
+  s.note = "The accompanying <code>dp_demo</code> program measures exactly this. "
+         + "Write-only: <b>256 faults \u2192 1024 kB</b>. Read the pages first, then write them: "
+         + "<b>512 faults \u2192 1024 kB</b>. Identical resident memory, twice the fault cost. "
+         + "So <code>calloc()</code>-then-scan patterns and \u201cpre-touch by reading\u201d "
+         + "warm-up loops are worse than useless &mdash; a read never pre-allocates anything.";
+  s.ratio = "same RAM, double the faults";
+  steps.push(snap(s));
+
+  /* major fault contrast */
+  s.pages[4] = {state:"disk", perm:"r-- P", frame:5};
+  s.frames[5] = {use:"disk"};
+  s.minflt = 5; s.majflt = 1; s.vmrss = PAGE_KB*2; s.flash = [4];
+  s.code = "int fd = open(\"data.bin\", O_RDONLY);\nchar *f = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0);\nc = f[0];";
+  s.kind = "major";
+  s.note = "The \u201creads are free\u201d rule is specific to <b>anonymous</b> memory. "
+         + "A file-backed page has real content, so a read fault must allocate a page cache "
+         + "frame and fill it from the block device. That blocking I/O is what makes it a "
+         + "<b>major fault</b> &mdash; and it is why <code>ru_majflt</code> climbing is a much "
+         + "louder warning sign than <code>ru_minflt</code> climbing.";
+  s.ratio = "minor fault: no I/O \u00b7 major fault: went to disk";
+  steps.push(snap(s));
+
+  return {steps, NP, NF, height: 322, zeroPage:true};
+}
+
+/* ---------------- rendering ---------------- */
+const svg = document.getElementById("svg");
+
+function render(scene, st){
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  svg.setAttribute("viewBox", "0 0 920 " + scene.height);
+
+  const defs = el("defs",{},svg);
+  for (const [id,col] of [["ah","var(--hot)"],["ac","var(--cold)"],["ad","var(--disk)"]]){
+    const m = el("marker",{id:id,viewBox:"0 0 8 8",refX:"7",refY:"4",
+      markerWidth:"7",markerHeight:"7",orient:"auto"},defs);
+    el("path",{d:"M0,0 L8,4 L0,8 z",fill:col},m);
+  }
+
+  el("text",{x:G.vx, y:34, class:"colhead"}, svg).textContent
+    = "virtual pages  (one anonymous VMA)";
+  el("text",{x:G.px, y:34, class:"colhead"}, svg).textContent = "page table entry";
+  el("text",{x:G.fx, y:34, class:"colhead"}, svg).textContent = "physical RAM  (page frames)";
+  el("line",{x1:G.vx,y1:40,x2:910,y2:40,stroke:"var(--rule-faint)"}, svg);
+
+  const zeroY = G.y0 + scene.NP*G.rh + 34;
+
+  /* frames column first, so arrows land on drawn boxes */
+  for (let f = 0; f < scene.NF; f++){
+    const y = G.y0 + f*G.rh;
+    const fr = st.frames[f];
+    const cls = "fbox" + (fr.use==="used" ? " used" : fr.use==="disk" ? " diskp" : "");
+    el("rect",{x:G.fx,y:y,width:G.fw,height:G.bh,class:cls}, svg);
+    const col = fr.use==="used" ? "var(--hot)"
+              : fr.use==="disk" ? "var(--disk)" : "var(--ink-soft)";
+    const t = el("text",{x:G.fx+9,y:y+16,class:"lbl",fill:col}, svg);
+    t.textContent = PHYS[f];
+    const t2 = el("text",{x:G.fx+128,y:y+16,class:"lbl",fill:col}, svg);
+    t2.textContent = fr.use==="free" ? "free"
+                   : fr.use==="disk" ? "page cache" : "in use";
+  }
+
+  /* shared zero page box */
+  if (scene.zeroPage){
+    el("rect",{x:G.fx,y:zeroY,width:G.fw,height:G.bh+8,class:"fbox zerop"}, svg);
+    const zt = el("text",{x:G.fx+9,y:zeroY+15,class:"lbl"}, svg);
+    zt.setAttribute("fill","var(--cold)"); zt.textContent = "0x0000_5000";
+    const ztb = el("text",{x:G.fx+128,y:zeroY+15,class:"lbl",fill:"var(--cold)"}, svg);
+    ztb.textContent = "shared zero page";
+    const zt2 = el("text",{x:G.fx+9,y:zeroY+27,class:"lbl-dim"}, svg);
+    zt2.setAttribute("font-size","10");
+    zt2.textContent = "one frame, read-only, system-wide";
+  }
+
+  /* rows: virtual page + PTE + arrow */
+  for (let i = 0; i < scene.NP; i++){
+    const y = G.y0 + i*G.rh;
+    const pg = st.pages[i];
+    const stateCls = pg.state==="frame" ? "st-frame"
+                   : pg.state==="zero"  ? "st-zero"
+                   : pg.state==="disk"  ? "st-disk" : "";
+    const g = el("g",{class: stateCls + (st.flash.includes(i) ? " flash" : "")}, svg);
+
+    el("rect",{x:G.vx,y:y,width:G.vw,height:G.bh,class:"vbox"}, g);
+    const vt = el("text",{x:G.vx+9,y:y+16,class:"lbl"}, g);
+    vt.textContent = "page " + i;
+    const vt2 = el("text",{x:G.vx+92,y:y+16,class:"lbl"}, g);
+    vt2.textContent = "+0x" + (i*0x1000).toString(16).padStart(5,"0");
+    if (pg.state==="disk"){ vt.setAttribute("fill","var(--disk)");
+                            vt2.setAttribute("fill","var(--disk)"); }
+
+    el("rect",{x:G.px,y:y,width:G.pw,height:G.bh,class:"pbox"}, g);
+    const pt = el("text",{x:G.px+9,y:y+16,class:pg.state==="res"?"lbl-dim":"lbl"}, g);
+    pt.textContent = pg.state==="res"  ? "empty, not present"
+                   : pg.state==="zero" ? "\u2192 zero page, r--"
+                   : pg.state==="disk" ? "\u2192 pfn, r--, present"
+                   :                     "\u2192 pfn, rw-, present";
+    if (pg.state==="disk"){ pt.setAttribute("fill","var(--disk)"); }
+
+    if (st.flash.includes(i)){
+      const fm = el("text",{x:G.px+G.pw+10,y:y+16,class:"faultmark"}, svg);
+      fm.textContent = "fault";
+    }
+
+    /* arrow PTE -> frame */
+    const x1 = G.px + G.pw + 46, x2 = G.fx - 4;
+    if (pg.state==="frame" || pg.state==="disk"){
+      const ty = G.y0 + pg.frame*G.rh + G.bh/2;
+      const cls = pg.state==="disk" ? "arrow disk" : "arrow hot";
+      el("path",{class:cls, d:`M${x1},${y+G.bh/2} C${(x1+x2)/2},${y+G.bh/2} `
+                 + `${(x1+x2)/2},${ty} ${x2},${ty}`,
+                 "marker-end":"url(#ah)"}, svg);
+    } else if (pg.state==="zero" && scene.zeroPage){
+      const ty = zeroY + (G.bh+8)/2;
+      el("path",{class:"arrow cold", d:`M${x1},${y+G.bh/2} C${(x1+x2)/2},${y+G.bh/2} `
+                 + `${(x1+x2)/2},${ty} ${x2},${ty}`,
+                 "marker-end":"url(#ac)"}, svg);
+    }
+  }
+
+  /* meters */
+  document.getElementById("m-size").innerHTML = fmt(st.vmsize)+'<span class="u"> kB</span>';
+  document.getElementById("m-rss").innerHTML  = fmt(st.vmrss) +'<span class="u"> kB</span>';
+  document.getElementById("m-min").textContent = st.minflt;
+  document.getElementById("m-maj").textContent = st.majflt;
+  document.getElementById("m-ratio").textContent = st.ratio || "\u00a0";
+
+  const codeEl = document.getElementById("code");
+  codeEl.textContent = st.code || "\u00a0";
+  codeEl.className = "code k-" + st.kind;
+  document.getElementById("note").innerHTML = st.note || "&nbsp;";
+}
+
+/* ---------------- driver ---------------- */
+const SCENES = [buildScene1(), buildScene2()];
+let sceneIx = 0, stepIx = 0, timer = null;
+
+function show(){
+  const sc = SCENES[sceneIx];
+  render(sc, sc.steps[stepIx]);
+  document.getElementById("count").textContent =
+    "step " + (stepIx+1) + " of " + sc.steps.length;
+  document.getElementById("prev").disabled = stepIx === 0;
+  document.getElementById("next").disabled = stepIx === sc.steps.length - 1;
+}
+function stop(){
+  if (timer){ clearInterval(timer); timer = null; }
+  document.getElementById("play").textContent = "Play";
+}
+function go(d){
+  const sc = SCENES[sceneIx];
+  stepIx = Math.min(sc.steps.length-1, Math.max(0, stepIx+d));
+  show();
+  if (stepIx === sc.steps.length-1) stop();
+}
+document.getElementById("next").onclick  = () => { stop(); go(1); };
+document.getElementById("prev").onclick  = () => { stop(); go(-1); };
+document.getElementById("reset").onclick = () => { stop(); stepIx = 0; show(); };
+document.getElementById("play").onclick  = () => {
+  if (timer){ stop(); return; }
+  if (stepIx === SCENES[sceneIx].steps.length-1) stepIx = 0;
+  show();
+  document.getElementById("play").textContent = "Pause";
+  timer = setInterval(() => go(1), 4200);
+};
+for (let i = 0; i < 2; i++){
+  document.getElementById("tab"+i).onclick = () => {
+    stop(); sceneIx = i; stepIx = 0;
+    document.getElementById("tab0").setAttribute("aria-selected", String(i===0));
+    document.getElementById("tab1").setAttribute("aria-selected", String(i===1));
+    show();
+  };
+}
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowRight"){ stop(); go(1); }
+  else if (e.key === "ArrowLeft"){ stop(); go(-1); }
+});
+show();
+</script>
+</body>
+</html>
